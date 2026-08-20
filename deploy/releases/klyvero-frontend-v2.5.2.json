@@ -1,0 +1,18 @@
+{
+  "release": "klyvero-frontend-v2.5.2",
+  "status": "ready-for-deploy",
+  "scope": "frontend",
+  "changes": [
+    "compact sidebar stabilized",
+    "official Klyvero logo retained in sidebar header",
+    "zero-value funnel stages render with zero progress",
+    "branded responsive 404 page"
+  ],
+  "source_commits": [
+    "0c4474535bb155eaddb03dd192ea2a92c7bdbd0e",
+    "a26a71d4ed60c64b18f53368a59b1b4848a50a1c",
+    "113c19b86f6c08ac632369bf485b56b85f91bd00",
+    "b1fef3c51c263ea033c95cacc387037f74dde961",
+    "9945ad67b941b60fd42dd88d9db6fb1569a526af"
+  ]
+}
