@@ -1,0 +1,19 @@
+{
+  "name": "klyvero",
+  "version": "2.5.0",
+  "private": true,
+  "packageManager": "pnpm@10.15.0",
+  "scripts": {
+    "dev": "pnpm -r --parallel --filter @klyvero/api --filter @klyvero/web dev",
+    "build": "pnpm -r --filter @klyvero/api --filter @klyvero/web build",
+    "test": "pnpm -r test",
+    "lint": "pnpm -r lint",
+    "db:generate": "pnpm --filter @klyvero/api prisma:generate",
+    "db:migrate": "pnpm --filter @klyvero/api prisma:migrate",
+    "db:seed": "pnpm --filter @klyvero/api prisma:seed",
+    "db:migration:create": "pnpm --filter @klyvero/api prisma:migration:create",
+    "check": "pnpm --filter @klyvero/api lint && pnpm --filter @klyvero/web lint",
+    "security:audit": "pnpm audit --audit-level high",
+    "launch:check": "node scripts/launch-readiness.mjs"
+  }
+}
