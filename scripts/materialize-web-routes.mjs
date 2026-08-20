@@ -10,7 +10,11 @@ const payload = ['00', '01', '02', '03']
 const files = JSON.parse(gunzipSync(Buffer.from(payload, 'base64')).toString('utf8'));
 const targetRoot = join(root, 'apps', 'web', 'app', 'app');
 
-for (const [relativePath, content] of Object.entries(files)) {
+for (const [relativePath, originalContent] of Object.entries(files)) {
+  let content = originalContent;
+  if (relativePath === 'inbox/page.tsx') {
+    content = content.replace('setSelected(s=>', 'setSelected((s:any)=>');
+  }
   const target = join(targetRoot, relativePath);
   mkdirSync(dirname(target), { recursive: true });
   writeFileSync(target, content, 'utf8');
