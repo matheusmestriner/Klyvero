@@ -27,6 +27,19 @@ export function SiteGovernance({
     setReady(true);
   }, []);
 
+  useEffect(() => {
+    function fallbackBrandAsset(event: Event) {
+      const target = event.target;
+      if (!(target instanceof HTMLImageElement) || !target.classList.contains('brand-logo')) return;
+      if (target.dataset.brandFallback === '1') return;
+      target.dataset.brandFallback = '1';
+      target.src = target.classList.contains('compact') ? '/brand/klyvero-icon.png' : '/brand/klyvero-logo.png';
+    }
+
+    document.addEventListener('error', fallbackBrandAsset, true);
+    return () => document.removeEventListener('error', fallbackBrandAsset, true);
+  }, []);
+
   function choose(value: Exclude<Consent, null>) {
     window.localStorage.setItem('klyvero.cookieConsent', value);
     window.localStorage.setItem('klyvero.cookieConsentAt', new Date().toISOString());
