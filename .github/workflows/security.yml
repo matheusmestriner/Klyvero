@@ -1,0 +1,27 @@
+name: Security
+on:
+  push:
+  pull_request:
+permissions:
+  contents: read
+jobs:
+  repository-guard:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Repository secret guard
+        run: node scripts/secret-scan.mjs
+      - name: Reject tracked sensitive files
+        shell: bash
+        run: |
+          set -euo pipefail
+          bad="$(git ls-files | grep -E '(^|/)(\.env($|\.)|.*\.(pem|key|p12|pfx|jks|keystore|db|sqlite|sqlite3|dump|backup)$)' | grep -v -E '(^|/)\.env\.example$' || true)"
+          if [ -n "$bad" ]; then
+            printf '%s\n' "$bad"
+            exit 1
+          fi

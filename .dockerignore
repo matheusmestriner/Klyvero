@@ -1,0 +1,41 @@
+# VCS / local configuration
+.git
+.gitignore
+.env
+.env.*
+!.env.example
+
+# Dependencies / build output
+node_modules
+**/node_modules
+.next
+**/.next
+dist
+**/dist
+coverage
+**/coverage
+
+# Runtime/session data
+services/whatsapp/data
+security/reports/runtime-*
+tmp
+temp
+
+# Secrets / local data
+**/*.pem
+**/*.key
+**/*.p12
+**/*.pfx
+**/*.jks
+**/*.keystore
+**/*.db
+**/*.sqlite
+**/*.sqlite3
+**/*.dump
+**/*.backup
+
+# Misc
+*.log
+.DS_Store
+.vscode
+.idea
