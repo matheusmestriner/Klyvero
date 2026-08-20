@@ -25,6 +25,10 @@ export type ResolvedBranding = {
   features?: Record<string, { enabled: boolean; config?: unknown }>;
 };
 
+export const DEFAULT_LOGO_URL = '/brand/klyvero-logo.png';
+export const DEFAULT_COMPACT_LOGO_URL = '/brand/klyvero-icon.png';
+export const DEFAULT_FAVICON_URL = DEFAULT_COMPACT_LOGO_URL;
+
 export function isFeatureEnabled(
   resolved: ResolvedBranding | null | undefined,
   feature?: string,
@@ -38,6 +42,12 @@ export function applyBranding(resolved: ResolvedBranding | null | undefined) {
   if (typeof document === 'undefined') return;
   const brand = resolved?.branding;
   if (!brand) return;
+
+  // Klyvero is the platform fallback. White-label tenants override these URLs
+  // whenever their own assets are configured.
+  brand.logoUrl ||= DEFAULT_LOGO_URL;
+  brand.compactLogoUrl ||= DEFAULT_COMPACT_LOGO_URL;
+  brand.faviconUrl ||= DEFAULT_FAVICON_URL;
 
   const root = document.documentElement;
   root.style.setProperty('--p', brand.primaryColor || '#5865f2');
@@ -53,14 +63,12 @@ export function applyBranding(resolved: ResolvedBranding | null | undefined) {
   const productName = brand.productName || resolved?.tenant?.name || 'Klyvero';
   document.title = productName;
 
-  if (brand.faviconUrl) {
-    let favicon = document.querySelector<HTMLLinkElement>('link[rel="icon"][data-white-label]');
-    if (!favicon) {
-      favicon = document.createElement('link');
-      favicon.rel = 'icon';
-      favicon.dataset.whiteLabel = 'true';
-      document.head.appendChild(favicon);
-    }
-    favicon.href = brand.faviconUrl;
+  let favicon = document.querySelector<HTMLLinkElement>('link[rel="icon"][data-white-label]');
+  if (!favicon) {
+    favicon = document.createElement('link');
+    favicon.rel = 'icon';
+    favicon.dataset.whiteLabel = 'true';
+    document.head.appendChild(favicon);
   }
+  favicon.href = brand.faviconUrl;
 }
