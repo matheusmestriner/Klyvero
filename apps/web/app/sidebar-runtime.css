@@ -1,0 +1,48 @@
+/* Runtime-enforced sidebar branding and desktop menu control. */
+.side-brand {
+  padding-left: 0 !important;
+  background: none !important;
+}
+
+.side-brand::before {
+  display: none !important;
+  content: none !important;
+}
+
+.side-brand .brand-logo.compact,
+.side-brand .mark {
+  display: none !important;
+}
+
+.klyvero-sidebar-logo {
+  display: block !important;
+  width: 34px !important;
+  height: 34px !important;
+  min-width: 34px !important;
+  flex: 0 0 34px !important;
+  object-fit: contain !important;
+  border-radius: 9px;
+}
+
+.sidebar-collapsed .klyvero-sidebar-logo {
+  width: 36px !important;
+  height: 36px !important;
+  min-width: 36px !important;
+  flex-basis: 36px !important;
+}
+
+.mobile-drawer .klyvero-sidebar-logo {
+  width: 32px !important;
+  height: 32px !important;
+  min-width: 32px !important;
+  flex-basis: 32px !important;
+}
+
+@media (max-width: 390px) {
+  .klyvero-sidebar-logo {
+    width: 30px !important;
+    height: 30px !important;
+    min-width: 30px !important;
+    flex-basis: 30px !important;
+  }
+}
