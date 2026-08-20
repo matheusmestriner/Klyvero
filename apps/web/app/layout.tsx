@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from 'next';
 import './globals.css';
+import './responsive.css';
 import { SiteGovernance } from '../components/site-governance';
 
 export const dynamic = 'force-dynamic';
