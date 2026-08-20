@@ -1,0 +1,43 @@
+# Dependencies / builds
+node_modules/
+.next/
+dist/
+coverage/
+*.log
+.DS_Store
+
+# Local environment and secrets
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+*.pfx
+*.jks
+*.keystore
+*.crt
+*.cer
+
+# Local databases / exported data
+*.db
+*.db-journal
+*.sqlite
+*.sqlite3
+*.dump
+*.backup
+*.bak
+*.tar
+*.gz
+
+# Runtime/session data
+services/whatsapp/data/
+security/reports/
+tmp/
+temp/
+.cache/
+
+# IDE / OS
+.vscode/
+.idea/
+Thumbs.db
