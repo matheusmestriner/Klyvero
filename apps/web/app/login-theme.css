@@ -1,0 +1,159 @@
+/* Login color system: explicit dark/light contrast without affecting the app shell. */
+.login{
+  color:var(--text);
+}
+
+.login-card{
+  color:var(--text);
+}
+
+.login-card h1,
+.login-card h2,
+.login-card h3,
+.login-card .logo,
+.login-card .login-legal,
+.login-card .field label,
+.login-card a{
+  color:var(--text);
+}
+
+.login-card .muted,
+.login-card .login-links,
+.login-card .login-legal span{
+  color:var(--muted);
+}
+
+.login-card input{
+  background:var(--card);
+  color:var(--text);
+  border-color:var(--border);
+}
+
+.login-card input::placeholder{
+  color:color-mix(in srgb,var(--muted) 86%,transparent);
+  opacity:1;
+}
+
+.login-card input:focus{
+  border-color:var(--p);
+  box-shadow:0 0 0 3px color-mix(in srgb,var(--p) 18%,transparent);
+}
+
+.login-card .btn.primary{
+  color:#fff;
+}
+
+html[data-theme="dark"] .login,
+@media(prefers-color-scheme:dark){
+  html:not([data-theme="light"]) .login{
+    color:#f8fafc;
+  }
+}
+
+html[data-theme="dark"] .login-card{
+  background:rgba(12,17,26,.94);
+  border-color:rgba(148,163,184,.16);
+  box-shadow:0 28px 80px rgba(0,0,0,.42);
+}
+
+html[data-theme="dark"] .login-card h1,
+html[data-theme="dark"] .login-card h2,
+html[data-theme="dark"] .login-card h3,
+html[data-theme="dark"] .login-card .logo,
+html[data-theme="dark"] .login-card .field label,
+html[data-theme="dark"] .login-card a,
+html[data-theme="dark"] .login-card .login-legal{
+  color:#fff;
+}
+
+html[data-theme="dark"] .login-card .muted,
+html[data-theme="dark"] .login-card .login-links,
+html[data-theme="dark"] .login-card .login-legal span{
+  color:#cbd5e1;
+}
+
+html[data-theme="dark"] .login-card input{
+  background:#0f1720;
+  color:#fff;
+  border-color:#2b3440;
+}
+
+html[data-theme="dark"] .login-card input::placeholder{
+  color:#94a3b8;
+}
+
+html[data-theme="dark"] .login-card .error{
+  color:#fecaca;
+  background:rgba(127,29,29,.22);
+  border-color:rgba(248,113,113,.32);
+}
+
+html[data-theme="light"] .login-card{
+  background:rgba(255,255,255,.92);
+  color:#151923;
+}
+
+html[data-theme="light"] .login-card h1,
+html[data-theme="light"] .login-card h2,
+html[data-theme="light"] .login-card h3,
+html[data-theme="light"] .login-card .logo,
+html[data-theme="light"] .login-card .field label,
+html[data-theme="light"] .login-card a,
+html[data-theme="light"] .login-card .login-legal{
+  color:#151923;
+}
+
+html[data-theme="light"] .login-card .muted,
+html[data-theme="light"] .login-card .login-links,
+html[data-theme="light"] .login-card .login-legal span{
+  color:#667085;
+}
+
+@media(prefers-color-scheme:dark){
+  html:not([data-theme="light"]) .login-card{
+    background:rgba(12,17,26,.94);
+    border-color:rgba(148,163,184,.16);
+    box-shadow:0 28px 80px rgba(0,0,0,.42);
+  }
+
+  html:not([data-theme="light"]) .login-card h1,
+  html:not([data-theme="light"]) .login-card h2,
+  html:not([data-theme="light"]) .login-card h3,
+  html:not([data-theme="light"]) .login-card .logo,
+  html:not([data-theme="light"]) .login-card .field label,
+  html:not([data-theme="light"]) .login-card a,
+  html:not([data-theme="light"]) .login-card .login-legal{
+    color:#fff;
+  }
+
+  html:not([data-theme="light"]) .login-card .muted,
+  html:not([data-theme="light"]) .login-card .login-links,
+  html:not([data-theme="light"]) .login-card .login-legal span{
+    color:#cbd5e1;
+  }
+
+  html:not([data-theme="light"]) .login-card input{
+    background:#0f1720;
+    color:#fff;
+    border-color:#2b3440;
+  }
+
+  html:not([data-theme="light"]) .login-card input::placeholder{
+    color:#94a3b8;
+  }
+}
+
+@media(max-width:640px){
+  .login{
+    padding:16px;
+  }
+
+  .login-card{
+    border-radius:20px;
+    padding:24px 20px;
+  }
+
+  .login-card h1{
+    font-size:25px;
+  }
+}

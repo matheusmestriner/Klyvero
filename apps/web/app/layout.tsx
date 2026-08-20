@@ -7,6 +7,7 @@ import './brand-header.css';
 import './sidebar-compact.css';
 import './sidebar-logo.css';
 import './sidebar-runtime.css';
+import './login-theme.css';
 import { SiteGovernance } from '../components/site-governance';
 import { SidebarRuntimeFix } from '../components/sidebar-runtime-fix';
 
