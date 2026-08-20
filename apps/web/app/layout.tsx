@@ -3,6 +3,7 @@ import './globals.css';
 import './responsive.css';
 import './theme-system.css';
 import './clean-ui.css';
+import './brand-header.css';
 import { SiteGovernance } from '../components/site-governance';
 
 export const dynamic = 'force-dynamic';
