@@ -1,0 +1,113 @@
+/* Stable compact sidebar — prevents squeezing/overlap at desktop widths */
+:root {
+  --ui-sidebar-collapsed: 84px;
+}
+
+.app.sidebar-collapsed {
+  grid-template-columns: var(--ui-sidebar-collapsed) minmax(0, 1fr) !important;
+}
+
+.app.sidebar-collapsed .desktop-side,
+.app.sidebar-collapsed .side {
+  width: var(--ui-sidebar-collapsed) !important;
+  min-width: var(--ui-sidebar-collapsed) !important;
+  max-width: var(--ui-sidebar-collapsed) !important;
+  flex: 0 0 var(--ui-sidebar-collapsed) !important;
+  padding-inline: 10px !important;
+  overflow-x: hidden !important;
+}
+
+.sidebar-collapsed .side-brand-row {
+  display: grid !important;
+  grid-template-columns: 1fr !important;
+  justify-items: center !important;
+  align-content: start !important;
+  gap: 8px !important;
+  min-height: 88px !important;
+  padding: 4px 0 10px !important;
+}
+
+.sidebar-collapsed .side-brand {
+  width: 42px !important;
+  min-width: 42px !important;
+  height: 42px !important;
+  display: grid !important;
+  place-items: center !important;
+  margin: 0 auto !important;
+}
+
+.sidebar-collapsed .side-brand::before {
+  width: 34px !important;
+  height: 34px !important;
+  flex: 0 0 34px !important;
+  margin: 0 !important;
+}
+
+.sidebar-collapsed .side-collapse {
+  position: static !important;
+  inset: auto !important;
+  width: 34px !important;
+  min-width: 34px !important;
+  height: 30px !important;
+  margin: 0 auto !important;
+  display: grid !important;
+  place-items: center !important;
+  background: var(--ui-surface) !important;
+  border: 1px solid var(--ui-border) !important;
+  border-radius: 8px !important;
+}
+
+.sidebar-collapsed .nav-groups {
+  width: 100%;
+  justify-items: center;
+  gap: 14px !important;
+}
+
+.sidebar-collapsed .nav-group,
+.sidebar-collapsed .nav-group-items {
+  width: 100%;
+  justify-items: center;
+}
+
+.sidebar-collapsed .nav-link {
+  width: 46px !important;
+  min-width: 46px !important;
+  height: 42px !important;
+  min-height: 42px !important;
+  margin: 0 auto !important;
+  padding: 0 !important;
+  justify-content: center !important;
+}
+
+.sidebar-collapsed .nav-icon {
+  width: 20px !important;
+  height: 20px !important;
+  min-width: 20px !important;
+}
+
+.sidebar-collapsed .nav-link.active::before {
+  left: -8px !important;
+  top: 9px !important;
+  bottom: 9px !important;
+}
+
+.sidebar-collapsed .side-footer {
+  width: 100%;
+}
+
+.sidebar-collapsed .workspace-card {
+  width: 46px !important;
+  min-width: 46px !important;
+  height: 46px !important;
+  margin-inline: auto !important;
+}
+
+@media (max-width: 900px) {
+  :root {
+    --ui-sidebar-collapsed: 84px;
+  }
+
+  .app.sidebar-collapsed {
+    display: block !important;
+  }
+}
