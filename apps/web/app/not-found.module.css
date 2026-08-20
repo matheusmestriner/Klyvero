@@ -1,0 +1,137 @@
+.shell {
+  min-height: 100dvh;
+  display: grid;
+  place-items: center;
+  padding: 32px 20px;
+  background:
+    radial-gradient(circle at 20% 15%, color-mix(in srgb, #2563eb 10%, transparent), transparent 32%),
+    radial-gradient(circle at 80% 85%, color-mix(in srgb, #7c3aed 8%, transparent), transparent 28%),
+    var(--ui-page, #0a0f16);
+  color: var(--ui-text, #f4f7fb);
+}
+
+.card {
+  width: min(100%, 620px);
+  padding: clamp(28px, 5vw, 48px);
+  border: 1px solid var(--ui-border, #202c3b);
+  border-radius: 22px;
+  background: color-mix(in srgb, var(--ui-surface, #101823) 94%, transparent);
+  box-shadow: 0 24px 70px rgba(0, 0, 0, .16);
+  text-align: left;
+}
+
+.brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 34px;
+  font-size: 18px;
+  font-weight: 800;
+  letter-spacing: -.03em;
+}
+
+.brandMark {
+  width: 30px;
+  height: 30px;
+  flex: 0 0 30px;
+  border-radius: 9px;
+  background: url('/brand/klyvero-icon.png') center / contain no-repeat;
+}
+
+.code {
+  margin-bottom: 10px;
+  color: #3b82f6;
+  font-size: clamp(64px, 12vw, 112px);
+  font-weight: 850;
+  line-height: .88;
+  letter-spacing: -.07em;
+}
+
+.kicker {
+  margin: 0 0 10px;
+  color: #60a5fa;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: .11em;
+  text-transform: uppercase;
+}
+
+.card h1 {
+  margin: 0;
+  max-width: 520px;
+  color: var(--ui-text, #f4f7fb);
+  font-size: clamp(28px, 5vw, 42px);
+  font-weight: 780;
+  line-height: 1.08;
+  letter-spacing: -.035em;
+}
+
+.copy {
+  margin: 18px 0 0;
+  max-width: 500px;
+  color: var(--ui-muted, #8f9cad);
+  font-size: 15px;
+  line-height: 1.7;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 28px;
+}
+
+.button {
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 18px;
+  border-radius: 11px;
+  font-size: 13px;
+  font-weight: 720;
+  text-decoration: none;
+  transition: transform 160ms ease, border-color 160ms ease, background 160ms ease;
+}
+
+.button:hover { transform: translateY(-1px); }
+
+.primary {
+  border: 1px solid #2563eb;
+  background: #2563eb;
+  color: #fff;
+}
+
+.primary:hover {
+  background: #1d4ed8;
+  border-color: #1d4ed8;
+}
+
+.secondary {
+  border: 1px solid var(--ui-border, #202c3b);
+  background: var(--ui-surface-2, #131d2a);
+  color: var(--ui-text, #f4f7fb);
+}
+
+.secondary:hover {
+  border-color: color-mix(in srgb, #2563eb 40%, var(--ui-border, #202c3b));
+}
+
+.help {
+  margin: 30px 0 0;
+  color: var(--ui-subtle, #667386);
+  font-size: 11px;
+}
+
+@media (max-width: 540px) {
+  .shell { padding: 18px; }
+  .card { padding: 28px 22px; border-radius: 18px; }
+  .brand { margin-bottom: 28px; }
+  .actions { display: grid; }
+  .button { width: 100%; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .button { transition: none; }
+  .button:hover { transform: none; }
+}
