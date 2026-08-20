@@ -1,0 +1,80 @@
+/* Official Klyvero brand header */
+.side-brand-row {
+  min-height: 54px;
+  align-items: center;
+}
+
+.side-brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  text-decoration: none;
+}
+
+/* Never render a broken remote white-label image in the platform header. */
+.side-brand .brand-logo.compact,
+.side-brand .mark {
+  display: none !important;
+}
+
+.side-brand::before {
+  content: '';
+  display: block;
+  width: 30px;
+  height: 30px;
+  flex: 0 0 30px;
+  border-radius: 9px;
+  background: url('/brand/klyvero-icon.png') center / contain no-repeat;
+}
+
+.side-brand > span {
+  display: block;
+  color: var(--text);
+  font-size: 17px;
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: -0.025em;
+  white-space: nowrap;
+}
+
+html[data-theme='dark'] .side-brand > span {
+  color: #f8fafc;
+}
+
+html[data-theme='light'] .side-brand > span {
+  color: #0f172a;
+}
+
+.sidebar-collapsed .side-brand {
+  justify-content: center;
+  width: 100%;
+}
+
+.sidebar-collapsed .side-brand::before {
+  width: 32px;
+  height: 32px;
+  flex-basis: 32px;
+}
+
+.sidebar-collapsed .side-brand > span {
+  display: none;
+}
+
+.mobile-drawer .side-brand::before {
+  width: 32px;
+  height: 32px;
+  flex-basis: 32px;
+}
+
+@media (max-width: 390px) {
+  .side-brand::before {
+    width: 28px;
+    height: 28px;
+    flex-basis: 28px;
+  }
+
+  .side-brand > span {
+    font-size: 16px;
+  }
+}
