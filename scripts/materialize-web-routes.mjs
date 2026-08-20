@@ -15,6 +15,12 @@ for (const [relativePath, originalContent] of Object.entries(files)) {
   if (relativePath === 'inbox/page.tsx') {
     content = content.replace('setSelected(s=>', 'setSelected((s:any)=>');
   }
+  if (relativePath === 'page.tsx') {
+    content = content.replace(
+      'const width = Math.max(18, Math.round((stage.deals / maxDeals) * 100));',
+      'const width = stage.deals <= 0 ? 0 : Math.max(18, Math.round((stage.deals / maxDeals) * 100));',
+    );
+  }
   const target = join(targetRoot, relativePath);
   mkdirSync(dirname(target), { recursive: true });
   writeFileSync(target, content, 'utf8');
