@@ -1,0 +1,14 @@
+{
+  "release": "klyvero-frontend-clean-v2.5.1",
+  "releasedAt": "2026-08-20T11:37:00-03:00",
+  "scope": "frontend",
+  "status": "production-candidate",
+  "changes": [
+    "clean responsive visual system",
+    "official Klyvero logo in the upper-left sidebar header",
+    "compact logo when the sidebar is collapsed",
+    "light and dark theme compatibility",
+    "mobile, tablet, desktop, ultrawide and TV responsiveness",
+    "no demo metrics embedded in the release"
+  ]
+}
