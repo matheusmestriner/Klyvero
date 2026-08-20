@@ -5,6 +5,7 @@ import './theme-system.css';
 import './clean-ui.css';
 import './brand-header.css';
 import './sidebar-compact.css';
+import './sidebar-logo.css';
 import { SiteGovernance } from '../components/site-governance';
 
 export const dynamic = 'force-dynamic';
