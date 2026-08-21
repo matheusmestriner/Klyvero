@@ -14,10 +14,15 @@ export default function Login() {
   const [error, setError] = useState('');
   const [brand, setBrand] = useState<ResolvedBranding | null>(null);
   const [bootstrapAvailable, setBootstrapAvailable] = useState(false);
+  const [busy, setBusy] = useState(false);
   const router = useRouter();
 
   useEffect(() => {
     const hostname = window.location.hostname;
+    const reason = new URLSearchParams(window.location.search).get('reason');
+    if (reason === 'session-expired') {
+      setError('Sua sessão expirou. Entre novamente para continuar.');
+    }
 
     api(`/branding/resolve/domain/${encodeURIComponent(hostname)}`)
       .then((resolved: ResolvedBranding) => {
@@ -52,6 +57,9 @@ export default function Login() {
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    if (busy) return;
+
+    setBusy(true);
     setError('');
 
     const form = new FormData(event.currentTarget);
@@ -66,10 +74,12 @@ export default function Login() {
         }),
       });
 
+      if (!data?.accessToken) throw new Error('missing_access_token');
       session.set(data.accessToken);
       router.replace('/app');
     } catch {
       setError('Não foi possível entrar. Verifique workspace, e-mail e senha.');
+      setBusy(false);
     }
   }
 
@@ -104,23 +114,25 @@ export default function Login() {
         {!brand?.tenant?.slug && (
           <div className="field">
             <label>Workspace</label>
-            <input name="tenantSlug" placeholder="sua-empresa" required />
+            <input name="tenantSlug" placeholder="sua-empresa" autoCapitalize="none" autoComplete="organization" required disabled={busy} />
           </div>
         )}
 
         <div className="field">
           <label>E-mail</label>
-          <input name="email" type="email" autoComplete="email" required />
+          <input name="email" type="email" autoComplete="email" required disabled={busy} />
         </div>
 
         <div className="field">
           <label>Senha</label>
-          <input name="password" type="password" autoComplete="current-password" required />
+          <input name="password" type="password" autoComplete="current-password" required disabled={busy} />
         </div>
 
-        {error && <div className="error">{error}</div>}
+        {error && <div className="error" role="alert">{error}</div>}
 
-        <button className="btn primary full">Entrar</button>
+        <button className="btn primary full" disabled={busy}>
+          {busy ? 'Entrando…' : 'Entrar'}
+        </button>
 
         {bootstrapAvailable && (
           <p className="muted center">
