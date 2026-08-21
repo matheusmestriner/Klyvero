@@ -1,7 +1,13 @@
 const BASE = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000/api/v1';
 
+type RefreshPayload = {
+  accessToken: string;
+  user?: unknown;
+  [key: string]: unknown;
+};
+
 let token = '';
-let refreshPromise: Promise<string> | null = null;
+let refreshPromise: Promise<RefreshPayload> | null = null;
 
 export const session = {
   set(value: string) {
@@ -32,7 +38,7 @@ async function readError(response: Response) {
   }
 }
 
-async function refreshAccessToken() {
+async function refreshAccessToken(): Promise<RefreshPayload> {
   if (!refreshPromise) {
     refreshPromise = fetch(`${BASE}/auth/refresh`, {
       method: 'POST',
@@ -41,10 +47,10 @@ async function refreshAccessToken() {
     })
       .then(async (response) => {
         if (!response.ok) throw new Error(await readError(response));
-        const data = await response.json();
+        const data = (await response.json()) as RefreshPayload;
         if (!data?.accessToken) throw new Error('missing_access_token');
         token = data.accessToken;
-        return token;
+        return data;
       })
       .catch((error) => {
         token = '';
@@ -94,8 +100,7 @@ async function request(path: string, init: RequestInit, allowRefresh: boolean) {
 
 export async function api(path: string, init: RequestInit = {}) {
   if (path === '/auth/refresh') {
-    await refreshAccessToken();
-    return { accessToken: token };
+    return refreshAccessToken();
   }
 
   return request(path, init, true);
