@@ -1,6 +1,5 @@
-/* Stable sidebar branding. The official Klyvero icon is rendered from a
-   repository-local asset so the header never depends on JS injection or a
-   remote white-label URL to show the platform mark. */
+/* Stable sidebar branding. Render the official Klyvero mark as a real image
+   from the repository. No pseudo-element or CSS-generated logo is used. */
 .side-brand {
   min-height: 38px;
   padding-left: 0 !important;
@@ -10,24 +9,33 @@
   gap: 10px !important;
 }
 
-/* The platform mark is always available as a CSS fallback. */
 .side-brand::before {
-  content: '' !important;
+  display: none !important;
+  content: none !important;
+  background: none !important;
+}
+
+/* Hide only the obsolete shell implementations. The runtime image below is
+   the single visible Klyvero platform mark. */
+.side-brand .brand-logo.compact,
+.side-brand .mark {
+  display: none !important;
+}
+
+.klyvero-sidebar-logo {
   display: block !important;
   width: 34px !important;
   height: 34px !important;
   min-width: 34px !important;
   flex: 0 0 34px !important;
+  object-fit: contain !important;
+  object-position: center !important;
   border-radius: 9px;
-  background: url('/brand/klyvero-icon.png') center / contain no-repeat !important;
-}
-
-/* Hide competing logo implementations in the shell/runtime. The local CSS
-   fallback above is the single source of truth for the platform sidebar. */
-.side-brand .brand-logo.compact,
-.side-brand .mark,
-.klyvero-sidebar-logo {
-  display: none !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+  filter: none !important;
+  mix-blend-mode: normal !important;
+  background: transparent !important;
 }
 
 .klyvero-sidebar-wordmark,
@@ -64,7 +72,7 @@ html[data-theme='dark'] .side-brand > span {
   gap: 0 !important;
 }
 
-.sidebar-collapsed .side-brand::before {
+.sidebar-collapsed .klyvero-sidebar-logo {
   width: 36px !important;
   height: 36px !important;
   min-width: 36px !important;
@@ -76,7 +84,7 @@ html[data-theme='dark'] .side-brand > span {
   display: none !important;
 }
 
-.mobile-drawer .side-brand::before {
+.mobile-drawer .klyvero-sidebar-logo {
   width: 32px !important;
   height: 32px !important;
   min-width: 32px !important;
@@ -94,7 +102,7 @@ html[data-theme='light'] .mobile-drawer .side-brand > span {
 }
 
 @media (max-width: 390px) {
-  .side-brand::before {
+  .klyvero-sidebar-logo {
     width: 30px !important;
     height: 30px !important;
     min-width: 30px !important;
