@@ -7,7 +7,8 @@ export type IconName =
   | 'audit' | 'search' | 'bell' | 'sun' | 'moon' | 'menu' | 'chevron-left'
   | 'chevron-right' | 'x' | 'plus' | 'arrow-up-right' | 'users' | 'target'
   | 'message' | 'calendar-check' | 'revenue' | 'sparkles' | 'filter' | 'more'
-  | 'send' | 'check' | 'clock' | 'building' | 'mail' | 'phone' | 'palette';
+  | 'send' | 'check' | 'clock' | 'building' | 'mail' | 'phone' | 'palette'
+  | 'shield' | 'activity' | 'refresh';
 
 type Props = SVGProps<SVGSVGElement> & { name: IconName; size?: number };
 
@@ -56,5 +57,8 @@ function shape(name: IconName) {
     case 'more': return <><circle cx="5" cy="12" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/></>;
     case 'send': return <><path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/></>;
     case 'check': return <path d="m5 12 4 4L19 6"/>;
+    case 'shield': return <><path d="M12 3 20 6v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6l8-3Z"/><path d="m9 12 2 2 4-4"/></>;
+    case 'activity': return <><path d="M3 12h4l2-6 4 12 2-6h6"/></>;
+    case 'refresh': return <><path d="M20 6v5h-5"/><path d="M4 18v-5h5"/><path d="M18.5 9A7 7 0 0 0 6 6.5L4 11M5.5 15A7 7 0 0 0 18 17.5l2-4.5"/></>;
   }
 }
