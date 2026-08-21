@@ -48,7 +48,6 @@ async function refreshAccessToken() {
       })
       .catch((error) => {
         token = '';
-        emitAuthExpired();
         throw error;
       })
       .finally(() => {
@@ -71,8 +70,14 @@ async function request(path: string, init: RequestInit, allowRefresh: boolean) {
   });
 
   if (response.status === 401 && path !== '/auth/refresh' && allowRefresh) {
-    await refreshAccessToken();
-    return request(path, init, false);
+    try {
+      await refreshAccessToken();
+      return request(path, init, false);
+    } catch (error) {
+      token = '';
+      emitAuthExpired();
+      throw error;
+    }
   }
 
   if (!response.ok) {
