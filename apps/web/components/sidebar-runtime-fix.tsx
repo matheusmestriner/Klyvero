@@ -2,7 +2,8 @@
 
 import { useEffect } from 'react';
 
-const LOGO_SRC = '/brand/klyvero-icon.png';
+const LOGO_SRC = '/brand/klyvero-sidebar-logo.png';
+const FALLBACK_LOGO_SRC = '/brand/klyvero-icon.png';
 const WORDMARK = 'Klyvero';
 
 export function SidebarRuntimeFix() {
@@ -12,13 +13,21 @@ export function SidebarRuntimeFix() {
         let image = brand.querySelector<HTMLImageElement>(':scope > img.klyvero-sidebar-logo');
         if (!image) {
           image = document.createElement('img');
-          image.src = LOGO_SRC;
-          image.alt = '';
+          image.alt = 'Klyvero';
           image.width = 34;
           image.height = 34;
           image.decoding = 'async';
           image.className = 'klyvero-sidebar-logo';
           brand.prepend(image);
+        }
+
+        if (image.dataset.klyveroOfficialLogo !== '1') {
+          image.src = LOGO_SRC;
+          image.dataset.klyveroOfficialLogo = '1';
+          image.onerror = () => {
+            if (image?.src.endsWith(FALLBACK_LOGO_SRC)) return;
+            image!.src = FALLBACK_LOGO_SRC;
+          };
         }
 
         let wordmark = brand.querySelector<HTMLElement>(':scope > .klyvero-sidebar-wordmark');
