@@ -1,30 +1,37 @@
-/* Runtime-enforced sidebar branding and desktop menu control. */
+/* Stable sidebar branding. The official Klyvero icon is rendered from a
+   repository-local asset so the header never depends on JS injection or a
+   remote white-label URL to show the platform mark. */
 .side-brand {
+  min-height: 38px;
   padding-left: 0 !important;
   background: none !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 10px !important;
 }
 
+/* The platform mark is always available as a CSS fallback. */
 .side-brand::before {
-  display: none !important;
-  content: none !important;
-}
-
-.side-brand .brand-logo.compact,
-.side-brand .mark {
-  display: none !important;
-}
-
-.klyvero-sidebar-logo {
+  content: '' !important;
   display: block !important;
   width: 34px !important;
   height: 34px !important;
   min-width: 34px !important;
   flex: 0 0 34px !important;
-  object-fit: contain !important;
   border-radius: 9px;
+  background: url('/brand/klyvero-icon.png') center / contain no-repeat !important;
 }
 
-.klyvero-sidebar-wordmark {
+/* Hide competing logo implementations in the shell/runtime. The local CSS
+   fallback above is the single source of truth for the platform sidebar. */
+.side-brand .brand-logo.compact,
+.side-brand .mark,
+.klyvero-sidebar-logo {
+  display: none !important;
+}
+
+.klyvero-sidebar-wordmark,
+.side-brand > span {
   display: block !important;
   color: #ffffff !important;
   font-size: 17px !important;
@@ -34,55 +41,68 @@
   white-space: nowrap !important;
 }
 
-html[data-theme='light'] .klyvero-sidebar-wordmark {
+html[data-theme='light'] .klyvero-sidebar-wordmark,
+html[data-theme='light'] .side-brand > span {
   color: #0f172a !important;
 }
 
-html[data-theme='dark'] .klyvero-sidebar-wordmark {
+html[data-theme='dark'] .klyvero-sidebar-wordmark,
+html[data-theme='dark'] .side-brand > span {
   color: #ffffff !important;
 }
 
 @media (prefers-color-scheme: dark) {
-  html:not([data-theme='light']) .klyvero-sidebar-wordmark {
+  html:not([data-theme='light']) .klyvero-sidebar-wordmark,
+  html:not([data-theme='light']) .side-brand > span {
     color: #ffffff !important;
   }
 }
 
-.sidebar-collapsed .klyvero-sidebar-logo {
+.sidebar-collapsed .side-brand {
+  justify-content: center !important;
+  width: 100% !important;
+  gap: 0 !important;
+}
+
+.sidebar-collapsed .side-brand::before {
   width: 36px !important;
   height: 36px !important;
   min-width: 36px !important;
   flex-basis: 36px !important;
 }
 
-.sidebar-collapsed .klyvero-sidebar-wordmark {
+.sidebar-collapsed .klyvero-sidebar-wordmark,
+.sidebar-collapsed .side-brand > span {
   display: none !important;
 }
 
-.mobile-drawer .klyvero-sidebar-logo {
+.mobile-drawer .side-brand::before {
   width: 32px !important;
   height: 32px !important;
   min-width: 32px !important;
   flex-basis: 32px !important;
 }
 
-.mobile-drawer .klyvero-sidebar-wordmark {
+.mobile-drawer .klyvero-sidebar-wordmark,
+.mobile-drawer .side-brand > span {
   color: #ffffff !important;
 }
 
-html[data-theme='light'] .mobile-drawer .klyvero-sidebar-wordmark {
+html[data-theme='light'] .mobile-drawer .klyvero-sidebar-wordmark,
+html[data-theme='light'] .mobile-drawer .side-brand > span {
   color: #0f172a !important;
 }
 
 @media (max-width: 390px) {
-  .klyvero-sidebar-logo {
+  .side-brand::before {
     width: 30px !important;
     height: 30px !important;
     min-width: 30px !important;
     flex-basis: 30px !important;
   }
 
-  .klyvero-sidebar-wordmark {
+  .klyvero-sidebar-wordmark,
+  .side-brand > span {
     font-size: 16px !important;
   }
 }
