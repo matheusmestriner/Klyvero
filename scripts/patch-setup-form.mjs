@@ -1,4 +1,4 @@
-import { readFileSync, writeFileSync } from 'node:fs';
+import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 
 const file = resolve(process.cwd(), 'apps/web/app/setup/page.tsx');
@@ -22,3 +22,11 @@ source = source.replace(
 );
 
 writeFileSync(file, source, 'utf8');
+
+for (const relative of ['apps/web/app/app/inbox/page.tsx', 'apps/web/app/app/email/page.tsx']) {
+  const target = resolve(process.cwd(), relative);
+  if (!existsSync(target)) continue;
+  const content = readFileSync(target, 'utf8');
+  const endpoints = [...content.matchAll(/api\(\s*[`'\"]([^`'\"]+)/g)].map((match) => match[1]);
+  console.log(`${relative} endpoints: ${[...new Set(endpoints)].join(', ') || 'none'}`);
+}
