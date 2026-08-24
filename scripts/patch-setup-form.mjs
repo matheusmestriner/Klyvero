@@ -36,4 +36,11 @@ for (const relative of ['apps/web/app/app/inbox/page.tsx', 'apps/web/app/app/ema
     const end = Math.min(content.length, marker + 2400);
     console.log(`INBOX_CONTRACT_BEGIN\n${content.slice(start, end)}\nINBOX_CONTRACT_END`);
   }
+
+  if (relative.includes('/email/')) {
+    const marker = content.indexOf("api('/email/send'");
+    const start = Math.max(0, marker - 1800);
+    const end = Math.min(content.length, marker + 1800);
+    console.log(`EMAIL_CONTRACT_BEGIN\n${content.slice(start, end)}\nEMAIL_CONTRACT_END`);
+  }
 }
