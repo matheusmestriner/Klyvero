@@ -4,7 +4,7 @@
   "private": true,
   "packageManager": "pnpm@10.15.0",
   "scripts": {
-    "preinstall": "node scripts/materialize-web-routes.mjs",
+    "preinstall": "node scripts/materialize-web-routes.mjs && node scripts/patch-whatsapp-thread-delete.mjs",
     "dev": "pnpm -r --parallel --filter @klyvero/api --filter @klyvero/web dev",
     "build": "pnpm -r --filter @klyvero/api --filter @klyvero/web build",
     "test": "pnpm -r test",
