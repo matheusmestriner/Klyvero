@@ -28,6 +28,7 @@ export type ResolvedBranding = {
 export const DEFAULT_LOGO_URL = '/brand/klyvero-logo.png';
 export const DEFAULT_COMPACT_LOGO_URL = '/brand/klyvero-sidebar-logo.png';
 export const DEFAULT_FAVICON_URL = '/brand/klyvero-icon.png';
+const LEGACY_COMPACT_LOGO_URL = '/brand/klyvero-icon.png';
 
 export function isFeatureEnabled(
   resolved: ResolvedBranding | null | undefined,
@@ -44,9 +45,13 @@ export function applyBranding(resolved: ResolvedBranding | null | undefined) {
   if (!brand) return;
 
   // Klyvero is the platform fallback. White-label tenants override these URLs
-  // whenever their own assets are configured.
+  // whenever their own assets are configured. Older platform configurations
+  // used the favicon-sized asset in the sidebar; normalize only that built-in
+  // legacy path without touching custom tenant logos.
   brand.logoUrl ||= DEFAULT_LOGO_URL;
-  brand.compactLogoUrl ||= DEFAULT_COMPACT_LOGO_URL;
+  if (!brand.compactLogoUrl || brand.compactLogoUrl === LEGACY_COMPACT_LOGO_URL) {
+    brand.compactLogoUrl = DEFAULT_COMPACT_LOGO_URL;
+  }
   brand.faviconUrl ||= DEFAULT_FAVICON_URL;
 
   const root = document.documentElement;
