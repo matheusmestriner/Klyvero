@@ -9,12 +9,13 @@ const payload = ['00', '01', '02', '03']
 
 const files = JSON.parse(gunzipSync(Buffer.from(payload, 'base64')).toString('utf8'));
 const targetRoot = join(root, 'apps', 'web', 'app', 'app');
+const sourceManagedRoutes = new Set(['team/page.tsx', 'calendar/page.tsx', 'whatsapp/page.tsx']);
 
 for (const [relativePath, originalContent] of Object.entries(files)) {
-  // Team and calendar are source-managed. Keeping them out of the generated
-  // payload prevents older bundled routes from replacing the current modules
-  // during pnpm preinstall on Render.
-  if (relativePath === 'team/page.tsx' || relativePath === 'calendar/page.tsx') continue;
+  // These routes are maintained as normal TypeScript source. Keeping them out
+  // of the generated payload prevents older bundled pages from replacing the
+  // current implementation during pnpm preinstall on Render or CI.
+  if (sourceManagedRoutes.has(relativePath)) continue;
 
   let content = originalContent;
 
@@ -71,4 +72,4 @@ for (const [relativePath, originalContent] of Object.entries(files)) {
   writeFileSync(target, content, 'utf8');
 }
 
-console.log(`Materialized ${Object.keys(files).length - 2} generated Klyvero operational routes; team and calendar routes preserved from source.`);
+console.log(`Materialized ${Object.keys(files).length - sourceManagedRoutes.size} generated Klyvero operational routes; source-managed routes preserved.`);
