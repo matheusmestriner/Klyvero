@@ -34,3 +34,11 @@ jobs:
       - name: Build and test WhatsApp service
         working-directory: services/whatsapp
         run: go test -mod=mod ./...
+      - name: Enable pnpm
+        run: corepack enable && corepack prepare pnpm@10.15.0 --activate
+      - name: Install web dependencies
+        run: pnpm install --no-frozen-lockfile
+      - name: Type-check web application
+        run: pnpm --filter @klyvero/web lint
+      - name: Build web application
+        run: pnpm --filter @klyvero/web build
