@@ -25,3 +25,12 @@ jobs:
             printf '%s\n' "$bad"
             exit 1
           fi
+      - name: Validate deploy runtime artifacts
+        run: node scripts/validate-runtime-artifacts.mjs
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.27.x'
+          cache-dependency-path: services/whatsapp/go.sum
+      - name: Build and test WhatsApp service
+        working-directory: services/whatsapp
+        run: go test ./...
