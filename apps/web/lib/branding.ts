@@ -26,8 +26,8 @@ export type ResolvedBranding = {
 };
 
 export const DEFAULT_LOGO_URL = '/brand/klyvero-logo.png';
-export const DEFAULT_COMPACT_LOGO_URL = '/brand/klyvero-icon.png';
-export const DEFAULT_FAVICON_URL = DEFAULT_COMPACT_LOGO_URL;
+export const DEFAULT_COMPACT_LOGO_URL = '/brand/klyvero-sidebar-logo.png';
+export const DEFAULT_FAVICON_URL = '/brand/klyvero-icon.png';
 
 export function isFeatureEnabled(
   resolved: ResolvedBranding | null | undefined,
