@@ -1,0 +1,19 @@
+/* Sidebar scroll remains fully functional while the visual scrollbar stays hidden. */
+.side,
+.desktop-side,
+.mobile-drawer {
+  overflow-y: auto;
+  overflow-x: hidden;
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+}
+
+.side::-webkit-scrollbar,
+.desktop-side::-webkit-scrollbar,
+.mobile-drawer::-webkit-scrollbar {
+  width: 0;
+  height: 0;
+  display: none;
+}
