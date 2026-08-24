@@ -1,0 +1,539 @@
+.prospecting-search-card,
+.prospecting-results-card {
+  padding: 22px;
+}
+
+.prospecting-section-head,
+.prospecting-results-head,
+.prospecting-toolbar,
+.prospecting-head-actions,
+.prospecting-row-actions,
+.prospecting-detail-head,
+.prospecting-detail-actions {
+  display: flex;
+  align-items: center;
+}
+
+.prospecting-section-head,
+.prospecting-results-head {
+  justify-content: space-between;
+  gap: 18px;
+  margin-bottom: 20px;
+}
+
+.prospecting-section-head h3,
+.prospecting-results-head h3,
+.prospecting-detail-head h3 {
+  margin: 4px 0 0;
+}
+
+.prospecting-section-head p,
+.prospecting-results-head p,
+.prospecting-detail-head p {
+  margin: 5px 0 0;
+}
+
+.prospecting-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 32px;
+  padding: 0 11px;
+  border: 1px solid var(--line, #dbe3ef);
+  border-radius: 999px;
+  color: var(--muted, #64748b);
+  font-size: 12px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.prospecting-status > span {
+  width: 7px;
+  height: 7px;
+  border-radius: 999px;
+  background: #22c55e;
+  box-shadow: 0 0 0 4px rgba(34, 197, 94, .12);
+}
+
+.prospecting-search-form {
+  display: grid;
+  grid-template-columns: minmax(240px, 2fr) minmax(118px, .75fr) minmax(180px, 1.2fr) minmax(110px, .65fr) minmax(128px, .75fr) auto;
+  gap: 12px;
+  align-items: end;
+}
+
+.prospecting-search-form label,
+.prospecting-search-form label > span {
+  min-width: 0;
+}
+
+.prospecting-search-form label > span {
+  display: block;
+  margin-bottom: 7px;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.prospecting-search-button {
+  min-height: 42px;
+  white-space: nowrap;
+}
+
+.prospecting-message {
+  margin-top: 14px;
+}
+
+.prospecting-metrics {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 14px;
+  margin: 16px 0;
+}
+
+.prospecting-metric {
+  display: flex;
+  align-items: flex-start;
+  gap: 13px;
+  padding: 17px;
+}
+
+.prospecting-metric-icon {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  flex: 0 0 36px;
+  border-radius: 11px;
+  background: color-mix(in srgb, var(--p, #2563eb) 11%, transparent);
+  color: var(--p, #2563eb);
+}
+
+.prospecting-metric > div {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+
+.prospecting-metric span:not(.prospecting-metric-icon) {
+  color: var(--muted, #64748b);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.prospecting-metric strong {
+  font-size: 25px;
+  line-height: 1.15;
+}
+
+.prospecting-metric small {
+  overflow: hidden;
+  color: var(--muted, #64748b);
+  font-size: 11px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.prospecting-head-actions,
+.prospecting-row-actions,
+.prospecting-detail-actions {
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.prospecting-toolbar {
+  gap: 10px;
+  padding: 13px;
+  margin-bottom: 12px;
+  border: 1px solid var(--line, #dbe3ef);
+  border-radius: 13px;
+  background: color-mix(in srgb, var(--surface, #fff) 92%, var(--p, #2563eb) 8%);
+}
+
+.prospecting-filter-search {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 220px;
+  flex: 1 1 320px;
+  height: 38px;
+  padding: 0 11px;
+  border: 1px solid var(--line, #dbe3ef);
+  border-radius: 10px;
+  background: var(--surface, #fff);
+  color: var(--muted, #64748b);
+}
+
+.prospecting-filter-search input {
+  width: 100%;
+  height: 100%;
+  padding: 0;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: var(--text, #0f172a);
+}
+
+.prospecting-toolbar select {
+  width: auto;
+  min-width: 160px;
+}
+
+.prospecting-filter-count {
+  margin-left: auto;
+  color: var(--muted, #64748b);
+  font-size: 12px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.prospecting-table-wrap {
+  overflow-x: auto;
+  border: 1px solid var(--line, #e2e8f0);
+  border-radius: 13px;
+}
+
+.prospecting-table {
+  min-width: 1030px;
+  margin: 0;
+}
+
+.prospecting-table tr.selected td {
+  background: color-mix(in srgb, var(--p, #2563eb) 6%, var(--surface, #fff));
+}
+
+.prospecting-select-column {
+  width: 42px;
+  text-align: center !important;
+}
+
+.prospecting-select-column input {
+  width: 16px;
+  height: 16px;
+  accent-color: var(--p, #2563eb);
+}
+
+.prospecting-company-button {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.prospecting-company-button > span:last-child {
+  display: grid;
+  gap: 3px;
+  min-width: 0;
+}
+
+.prospecting-company-button strong {
+  max-width: 260px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.prospecting-company-button small {
+  max-width: 260px;
+  overflow: hidden;
+  color: var(--muted, #64748b);
+  font-size: 11px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.prospecting-company-avatar {
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  flex: 0 0 34px;
+  border-radius: 10px;
+  background: linear-gradient(145deg, color-mix(in srgb, var(--p, #2563eb) 18%, var(--surface, #fff)), color-mix(in srgb, var(--p, #2563eb) 7%, var(--surface, #fff)));
+  color: var(--p, #2563eb);
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.prospecting-company-avatar.large {
+  width: 48px;
+  height: 48px;
+  flex-basis: 48px;
+  border-radius: 14px;
+  font-size: 14px;
+}
+
+.prospecting-category {
+  display: inline-flex;
+  max-width: 180px;
+  padding: 5px 8px;
+  overflow: hidden;
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--p, #2563eb) 8%, transparent);
+  color: var(--text, #0f172a);
+  font-size: 11px;
+  font-weight: 700;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.prospecting-contact-stack {
+  display: grid;
+  gap: 5px;
+}
+
+.prospecting-contact-stack a {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  max-width: 210px;
+  overflow: hidden;
+  color: inherit;
+  font-size: 12px;
+  text-decoration: none;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.prospecting-contact-stack a:hover {
+  color: var(--p, #2563eb);
+}
+
+.prospecting-quality {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 2px;
+  min-width: 57px;
+  padding: 5px 8px;
+  border-radius: 999px;
+  font-weight: 800;
+}
+
+.prospecting-quality small {
+  font-size: 9px;
+  font-weight: 700;
+  opacity: .68;
+}
+
+.prospecting-quality.high {
+  background: rgba(34, 197, 94, .12);
+  color: #16a34a;
+}
+
+.prospecting-quality.medium {
+  background: rgba(245, 158, 11, .13);
+  color: #d97706;
+}
+
+.prospecting-quality.low {
+  background: rgba(100, 116, 139, .12);
+  color: #64748b;
+}
+
+.prospecting-lead-button {
+  min-height: 32px;
+  padding-inline: 10px;
+}
+
+.prospecting-empty-results,
+.prospecting-empty-filter,
+.prospecting-start-state {
+  min-height: 220px;
+}
+
+.prospecting-start-state {
+  margin-top: 16px;
+}
+
+.prospecting-detail-backdrop {
+  justify-content: flex-end;
+  padding: 0;
+}
+
+.prospecting-detail-panel {
+  width: min(480px, 100%);
+  height: 100%;
+  padding: 24px;
+  overflow-y: auto;
+  border-left: 1px solid var(--line, #dbe3ef);
+  background: var(--surface, #fff);
+  box-shadow: -22px 0 55px rgba(15, 23, 42, .18);
+}
+
+.prospecting-detail-head {
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.prospecting-detail-company {
+  display: flex;
+  align-items: center;
+  gap: 13px;
+  min-width: 0;
+}
+
+.prospecting-detail-company > div {
+  min-width: 0;
+}
+
+.prospecting-detail-company h3 {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.prospecting-detail-score {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 15px;
+  padding: 15px;
+  margin-top: 22px;
+  border: 1px solid var(--line, #dbe3ef);
+  border-radius: 12px;
+}
+
+.prospecting-detail-score > span {
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.prospecting-detail-list {
+  display: grid;
+  gap: 0;
+  margin: 18px 0 24px;
+}
+
+.prospecting-detail-list > div {
+  display: grid;
+  grid-template-columns: 110px minmax(0, 1fr);
+  gap: 16px;
+  padding: 13px 0;
+  border-bottom: 1px solid var(--line, #e2e8f0);
+}
+
+.prospecting-detail-list dt {
+  color: var(--muted, #64748b);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.prospecting-detail-list dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+  font-size: 13px;
+}
+
+.prospecting-detail-list a {
+  color: var(--p, #2563eb);
+  text-decoration: none;
+}
+
+@media (max-width: 1280px) {
+  .prospecting-search-form {
+    grid-template-columns: minmax(240px, 2fr) 120px minmax(180px, 1fr) 110px 130px;
+  }
+
+  .prospecting-search-button {
+    grid-column: 1 / -1;
+    justify-self: start;
+  }
+}
+
+@media (max-width: 980px) {
+  .prospecting-metrics {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .prospecting-search-form {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .prospecting-segment-field {
+    grid-column: 1 / -1;
+  }
+
+  .prospecting-section-head,
+  .prospecting-results-head {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .prospecting-head-actions {
+    width: 100%;
+  }
+}
+
+@media (max-width: 640px) {
+  .prospecting-search-card,
+  .prospecting-results-card {
+    padding: 16px;
+  }
+
+  .prospecting-search-form,
+  .prospecting-metrics {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .prospecting-segment-field,
+  .prospecting-search-button {
+    grid-column: auto;
+  }
+
+  .prospecting-search-button,
+  .prospecting-head-actions .btn {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .prospecting-status {
+    white-space: normal;
+  }
+
+  .prospecting-toolbar {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .prospecting-filter-search,
+  .prospecting-toolbar select {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .prospecting-filter-count {
+    margin-left: 0;
+  }
+
+  .prospecting-detail-panel {
+    padding: 18px;
+  }
+
+  .prospecting-detail-list > div {
+    grid-template-columns: 1fr;
+    gap: 5px;
+  }
+
+  .prospecting-detail-actions .btn {
+    flex: 1 1 100%;
+    justify-content: center;
+  }
+}
+
+html[data-theme='dark'] .prospecting-toolbar,
+html[data-theme='dark'] .prospecting-filter-search,
+html[data-theme='dark'] .prospecting-detail-panel {
+  background: #0d141e;
+}
+
+html[data-theme='dark'] .prospecting-table tr.selected td {
+  background: rgba(37, 99, 235, .09);
+}
+
+html[data-theme='dark'] .prospecting-category {
+  color: #dbeafe;
+}
