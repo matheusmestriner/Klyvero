@@ -1,4 +1,4 @@
-import { existsSync, readFileSync, writeFileSync } from 'node:fs';
+import { readFileSync, writeFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 
 const file = resolve(process.cwd(), 'apps/web/app/setup/page.tsx');
@@ -22,25 +22,3 @@ source = source.replace(
 );
 
 writeFileSync(file, source, 'utf8');
-
-for (const relative of ['apps/web/app/app/inbox/page.tsx', 'apps/web/app/app/email/page.tsx']) {
-  const target = resolve(process.cwd(), relative);
-  if (!existsSync(target)) continue;
-  const content = readFileSync(target, 'utf8');
-  const endpoints = [...content.matchAll(/api\(\s*[`'\"]([^`'\"]+)/g)].map((match) => match[1]);
-  console.log(`${relative} endpoints: ${[...new Set(endpoints)].join(', ') || 'none'}`);
-
-  if (relative.includes('/inbox/')) {
-    const marker = content.indexOf("api('/inbox'");
-    const start = Math.max(0, marker - 900);
-    const end = Math.min(content.length, marker + 2400);
-    console.log(`INBOX_CONTRACT_BEGIN\n${content.slice(start, end)}\nINBOX_CONTRACT_END`);
-  }
-
-  if (relative.includes('/email/')) {
-    const marker = content.indexOf("api('/email/send'");
-    const start = Math.max(0, marker - 1800);
-    const end = Math.min(content.length, marker + 1800);
-    console.log(`EMAIL_CONTRACT_BEGIN\n${content.slice(start, end)}\nEMAIL_CONTRACT_END`);
-  }
-}
