@@ -9,7 +9,7 @@ const payload = ['00', '01', '02', '03']
 
 const files = JSON.parse(gunzipSync(Buffer.from(payload, 'base64')).toString('utf8'));
 const targetRoot = join(root, 'apps', 'web', 'app', 'app');
-const sourceManagedRoutes = new Set(['team/page.tsx', 'calendar/page.tsx', 'whatsapp/page.tsx', 'inbox/page.tsx', 'billing/page.tsx', 'prospecting/page.tsx', 'ai/page.tsx']);
+const sourceManagedRoutes = new Set(['team/page.tsx', 'calendar/page.tsx', 'whatsapp/page.tsx', 'inbox/page.tsx', 'email/page.tsx', 'billing/page.tsx', 'prospecting/page.tsx', 'ai/page.tsx']);
 
 for (const [relativePath, originalContent] of Object.entries(files)) {
   // These routes are maintained as normal TypeScript source. Keeping them out
