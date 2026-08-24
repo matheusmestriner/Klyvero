@@ -29,4 +29,11 @@ for (const relative of ['apps/web/app/app/inbox/page.tsx', 'apps/web/app/app/ema
   const content = readFileSync(target, 'utf8');
   const endpoints = [...content.matchAll(/api\(\s*[`'\"]([^`'\"]+)/g)].map((match) => match[1]);
   console.log(`${relative} endpoints: ${[...new Set(endpoints)].join(', ') || 'none'}`);
+
+  if (relative.includes('/inbox/')) {
+    const marker = content.indexOf("api('/inbox'");
+    const start = Math.max(0, marker - 900);
+    const end = Math.min(content.length, marker + 2400);
+    console.log(`INBOX_CONTRACT_BEGIN\n${content.slice(start, end)}\nINBOX_CONTRACT_END`);
+  }
 }
