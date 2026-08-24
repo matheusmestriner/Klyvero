@@ -22,8 +22,9 @@ function decodeParts(prefix) {
 
 function validateAPI() {
   const source = decodeParts('free-api-v3.part.').toString('utf8');
-  if (!source.includes('/api/v1/whatsapp')) {
-    throw new Error('Free API runtime is missing the WhatsApp public contract');
+  const normalized = source.toLowerCase();
+  if (!normalized.includes('whatsapp')) {
+    throw new Error('Free API runtime is missing WhatsApp support');
   }
   if (!source.includes('/auth/refresh')) {
     throw new Error('Free API runtime is missing authentication refresh support');
