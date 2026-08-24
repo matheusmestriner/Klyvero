@@ -1,5 +1,5 @@
-/* Stable sidebar branding. Render the official Klyvero mark as a real image
-   from the repository. No pseudo-element or CSS-generated logo is used. */
+/* Stable sidebar branding. The AppShell owns the logo markup; CSS only
+   presents the real image and provides a local fallback when no image exists. */
 .side-brand {
   min-height: 38px;
   padding-left: 0 !important;
@@ -15,14 +15,7 @@
   background: none !important;
 }
 
-/* Hide only the obsolete shell implementations. The runtime image below is
-   the single visible Klyvero platform mark. */
-.side-brand .brand-logo.compact,
-.side-brand .mark {
-  display: none !important;
-}
-
-.klyvero-sidebar-logo {
+.side-brand .brand-logo.compact {
   display: block !important;
   width: 34px !important;
   height: 34px !important;
@@ -36,6 +29,25 @@
   filter: none !important;
   mix-blend-mode: normal !important;
   background: transparent !important;
+}
+
+/* Fallback used only when AppShell has no branding image at all. */
+.side-brand .mark {
+  display: block !important;
+  width: 34px !important;
+  height: 34px !important;
+  min-width: 34px !important;
+  flex: 0 0 34px !important;
+  border-radius: 9px !important;
+  background: url('/brand/klyvero-sidebar-logo.png') center / contain no-repeat !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+  filter: none !important;
+}
+
+/* Legacy injected image is intentionally disabled. */
+.klyvero-sidebar-logo {
+  display: none !important;
 }
 
 .klyvero-sidebar-wordmark,
@@ -72,7 +84,8 @@ html[data-theme='dark'] .side-brand > span {
   gap: 0 !important;
 }
 
-.sidebar-collapsed .klyvero-sidebar-logo {
+.sidebar-collapsed .side-brand .brand-logo.compact,
+.sidebar-collapsed .side-brand .mark {
   width: 36px !important;
   height: 36px !important;
   min-width: 36px !important;
@@ -84,7 +97,8 @@ html[data-theme='dark'] .side-brand > span {
   display: none !important;
 }
 
-.mobile-drawer .klyvero-sidebar-logo {
+.mobile-drawer .side-brand .brand-logo.compact,
+.mobile-drawer .side-brand .mark {
   width: 32px !important;
   height: 32px !important;
   min-width: 32px !important;
@@ -102,7 +116,8 @@ html[data-theme='light'] .mobile-drawer .side-brand > span {
 }
 
 @media (max-width: 390px) {
-  .klyvero-sidebar-logo {
+  .side-brand .brand-logo.compact,
+  .side-brand .mark {
     width: 30px !important;
     height: 30px !important;
     min-width: 30px !important;
