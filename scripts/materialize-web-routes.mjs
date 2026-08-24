@@ -9,7 +9,7 @@ const payload = ['00', '01', '02', '03']
 
 const files = JSON.parse(gunzipSync(Buffer.from(payload, 'base64')).toString('utf8'));
 const targetRoot = join(root, 'apps', 'web', 'app', 'app');
-const sourceManagedRoutes = new Set(['team/page.tsx', 'calendar/page.tsx', 'whatsapp/page.tsx']);
+const sourceManagedRoutes = new Set(['team/page.tsx', 'calendar/page.tsx', 'whatsapp/page.tsx', 'inbox/page.tsx']);
 
 for (const [relativePath, originalContent] of Object.entries(files)) {
   // These routes are maintained as normal TypeScript source. Keeping them out
@@ -18,12 +18,6 @@ for (const [relativePath, originalContent] of Object.entries(files)) {
   if (sourceManagedRoutes.has(relativePath)) continue;
 
   let content = originalContent;
-
-  if (relativePath === 'inbox/page.tsx') {
-    const endpoints = [...originalContent.matchAll(/api\(\s*[`'\"]([^`'\"]+)/g)].map((match) => match[1]);
-    console.log(`Inbox compatibility endpoints: ${[...new Set(endpoints)].join(', ') || 'none'}`);
-    content = content.replace('setSelected(s=>', 'setSelected((s:any)=>');
-  }
 
   if (relativePath === 'page.tsx') {
     content = content.replace(
