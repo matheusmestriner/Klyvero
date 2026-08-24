@@ -11,6 +11,7 @@ import './login-theme.css';
 import './auth-runtime.css';
 import './route-state.css';
 import './team-management.css';
+import './calendar.css';
 import { SiteGovernance } from '../components/site-governance';
 import { SidebarRuntimeFix } from '../components/sidebar-runtime-fix';
 import { AuthRuntimeGuard } from '../components/auth-runtime-guard';
