@@ -7,6 +7,7 @@ import './brand-header.css';
 import './sidebar-compact.css';
 import './sidebar-logo.css';
 import './sidebar-runtime.css';
+import './sidebar-scroll.css';
 import './login-theme.css';
 import './auth-runtime.css';
 import './route-state.css';
