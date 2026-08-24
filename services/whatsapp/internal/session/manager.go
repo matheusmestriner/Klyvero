@@ -137,7 +137,10 @@ var safeName = regexp.MustCompile(`[^a-zA-Z0-9_-]+`)
 
 func (m *Manager) dbURL(tenantID, sessionID string) string {
 	name := safeName.ReplaceAllString(tenantID+"_"+sessionID, "_")
-	return fmt.Sprintf("file:%s?_foreign_keys=on", filepath.Join(m.databaseDir, name+".db"))
+	return fmt.Sprintf(
+		"file:%s?_foreign_keys=on&_busy_timeout=15000&_journal_mode=WAL&_synchronous=NORMAL",
+		filepath.Join(m.databaseDir, name+".db"),
+	)
 }
 
 // Connect creates or restores a whatsmeow client. Pairing deliberately uses a
