@@ -5,6 +5,7 @@ export const dynamic = 'force-dynamic';
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000/api/v1';
 const UPSTREAM_SEARCH_URL = 'https://nominatim.openstreetmap.org/search';
+const UPSTREAM_REVERSE_URL = 'https://nominatim.openstreetmap.org/reverse';
 const MAX_RESULTS = 50;
 const CACHE_TTL_MS = 15 * 60 * 1000;
 const CLIENT_WINDOW_MS = 60 * 60 * 1000;
@@ -16,6 +17,9 @@ type SearchBody = {
   businessType?: string;
   state?: string;
   city?: string;
+  latitude?: number;
+  longitude?: number;
+  accuracyM?: number;
   radiusKm?: number;
   limit?: number;
 };
@@ -34,6 +38,10 @@ type UpstreamPlace = {
   address?: Record<string, string | undefined>;
   extratags?: Record<string, string | undefined>;
   namedetails?: Record<string, string | undefined>;
+};
+
+type ReverseResult = {
+  address?: Record<string, string | undefined>;
 };
 
 type CacheEntry = { expiresAt: number; payload: unknown };
@@ -66,35 +74,56 @@ export async function POST(request: NextRequest) {
 
     const body = (await request.json()) as SearchBody;
     const segment = clean(body.businessType || body.query || '', 90);
-    const city = clean(body.city || '', 80);
-    const state = cleanState(body.state || '');
+    const requestedCity = clean(body.city || '', 80);
+    const requestedState = cleanState(body.state || '');
+    const latitude = finiteCoordinate(body.latitude, -90, 90);
+    const longitude = finiteCoordinate(body.longitude, -180, 180);
+    const hasBrowserLocation = latitude !== null && longitude !== null;
+    const accuracyM = clampNumber(body.accuracyM, 0, 50_000, 0);
     const radiusKm = clampNumber(body.radiusKm, 1, 100, 10);
     const limit = Math.round(clampNumber(body.limit, 1, MAX_RESULTS, 30));
 
-    if (segment.length < 2 || city.length < 2 || !state) {
+    if (segment.length < 2 || (!hasBrowserLocation && (requestedCity.length < 2 || !requestedState))) {
       return NextResponse.json(
-        { error: 'invalid_search', message: 'Informe ramo, cidade e estado válidos.' },
+        { error: 'invalid_search', message: 'Informe o ramo e uma cidade/estado válidos ou autorize sua localização.' },
         { status: 400 },
       );
     }
 
-    const cacheKey = `${segment}|${city}|${state}|${radiusKm}|${limit}`.toLocaleLowerCase('pt-BR');
+    let center: { lat: number; lon: number } | null = null;
+    let city = requestedCity;
+    let state = requestedState;
+    let source: 'browser' | 'manual' = 'manual';
+
+    if (hasBrowserLocation) {
+      center = { lat: latitude, lon: longitude };
+      source = 'browser';
+      const region = await reverseGeocode(latitude, longitude).catch(() => null);
+      city = region?.city || requestedCity || 'Sua localização';
+      state = region?.state || requestedState;
+    } else {
+      center = await geocodeCity(requestedCity, requestedState);
+    }
+
+    if (!center) {
+      return NextResponse.json(
+        { error: 'location_not_found', message: 'Não foi possível localizar a região informada.' },
+        { status: 404 },
+      );
+    }
+
+    const locationKey = source === 'browser'
+      ? `${center.lat.toFixed(3)}|${center.lon.toFixed(3)}`
+      : `${city}|${state}`;
+    const cacheKey = `${segment}|${locationKey}|${radiusKm}|${limit}`.toLocaleLowerCase('pt-BR');
     const cached = cache.get(cacheKey);
     if (cached && cached.expiresAt > Date.now()) {
       return NextResponse.json(cached.payload, { headers: responseHeaders('HIT') });
     }
 
-    const center = await geocodeCity(city, state);
-    if (!center) {
-      return NextResponse.json(
-        { error: 'location_not_found', message: 'Não foi possível localizar a cidade informada.' },
-        { status: 404 },
-      );
-    }
-
-    const places = await searchBusinesses(segment, city, state, center.lat, center.lon, radiusKm, limit);
-    const items = normalizePlaces(places, segment, center.lat, center.lon, radiusKm)
-      .slice(0, limit);
+    const searchCity = city === 'Sua localização' ? '' : city;
+    const places = await searchBusinesses(segment, searchCity, state, center.lat, center.lon, radiusKm, limit);
+    const items = normalizePlaces(places, segment, center.lat, center.lon, radiusKm).slice(0, limit);
 
     const payload = {
       items,
@@ -102,9 +131,11 @@ export async function POST(request: NextRequest) {
         query: segment,
         city,
         state,
+        source,
         radiusKm,
         total: items.length,
         center,
+        accuracyM: source === 'browser' && accuracyM > 0 ? Math.round(accuracyM) : undefined,
         generatedAt: new Date().toISOString(),
       },
     };
@@ -126,7 +157,7 @@ async function validateSession(authorization: string) {
   try {
     const response = await fetch(`${API_BASE}/branding/me`, {
       method: 'GET',
-      headers: { authorization: authorization },
+      headers: { authorization },
       cache: 'no-store',
       signal: AbortSignal.timeout(8000),
     });
@@ -152,6 +183,29 @@ async function geocodeCity(city: string, state: string) {
   return { lat, lon };
 }
 
+async function reverseGeocode(lat: number, lon: number) {
+  await scheduleUpstream();
+  const params = new URLSearchParams({
+    format: 'jsonv2',
+    lat: lat.toFixed(6),
+    lon: lon.toFixed(6),
+    zoom: '10',
+    addressdetails: '1',
+  });
+  const response = await fetch(`${UPSTREAM_REVERSE_URL}?${params.toString()}`, {
+    headers: upstreamHeaders(),
+    cache: 'no-store',
+    signal: AbortSignal.timeout(12000),
+  });
+  if (!response.ok) throw new Error(`reverse_${response.status}`);
+  const payload = (await response.json()) as ReverseResult;
+  const address = payload.address || {};
+  return {
+    city: clean(address.city || address.town || address.municipality || address.village || address.county || '', 100),
+    state: extractStateCode(address),
+  };
+}
+
 async function searchBusinesses(
   segment: string,
   city: string,
@@ -168,9 +222,10 @@ async function searchBusinesses(
     .map((value) => value.toFixed(6))
     .join(',');
 
+  const query = [segment, city, state, 'Brasil'].filter(Boolean).join(', ');
   const params = new URLSearchParams({
     format: 'jsonv2',
-    q: `${segment}, ${city}, ${state}, Brasil`,
+    q: query,
     countrycodes: 'br',
     addressdetails: '1',
     extratags: '1',
@@ -187,17 +242,21 @@ async function searchBusinesses(
 async function upstreamFetch(params: URLSearchParams): Promise<UpstreamPlace[]> {
   await scheduleUpstream();
   const response = await fetch(`${UPSTREAM_SEARCH_URL}?${params.toString()}`, {
-    headers: {
-      Accept: 'application/json',
-      'Accept-Language': 'pt-BR,pt;q=0.9,en;q=0.5',
-      'User-Agent': 'Klyvero-SalesOS/2.5 prospecting-search',
-    },
+    headers: upstreamHeaders(),
     cache: 'no-store',
     signal: AbortSignal.timeout(12000),
   });
   if (!response.ok) throw new Error(`upstream_${response.status}`);
   const payload = await response.json();
   return Array.isArray(payload) ? payload : [];
+}
+
+function upstreamHeaders() {
+  return {
+    Accept: 'application/json',
+    'Accept-Language': 'pt-BR,pt;q=0.9,en;q=0.5',
+    'User-Agent': 'Klyvero-SalesOS/2.5 prospecting-search',
+  };
 }
 
 function scheduleUpstream() {
@@ -318,6 +377,19 @@ function clean(value: unknown, maxLength: number) {
 function cleanState(value: string) {
   const state = clean(value, 2).toUpperCase();
   return /^[A-Z]{2}$/.test(state) ? state : '';
+}
+
+function extractStateCode(address: Record<string, string | undefined>) {
+  const iso = address['ISO3166-2-lvl4'] || address['ISO3166-2-lvl6'] || '';
+  const match = String(iso).toUpperCase().match(/BR-([A-Z]{2})/);
+  if (match?.[1]) return match[1];
+  return '';
+}
+
+function finiteCoordinate(value: unknown, min: number, max: number) {
+  const numeric = Number(value);
+  if (!Number.isFinite(numeric) || numeric < min || numeric > max) return null;
+  return numeric;
 }
 
 function clampNumber(value: unknown, min: number, max: number, fallback: number) {
