@@ -11,10 +11,10 @@ const files = JSON.parse(gunzipSync(Buffer.from(payload, 'base64')).toString('ut
 const targetRoot = join(root, 'apps', 'web', 'app', 'app');
 
 for (const [relativePath, originalContent] of Object.entries(files)) {
-  // Team management is source-managed from this point forward. Keeping it out of
-  // the generated payload prevents an older bundled route from replacing the
-  // current RBAC/team implementation during pnpm preinstall on Render.
-  if (relativePath === 'team/page.tsx') continue;
+  // Team and calendar are source-managed. Keeping them out of the generated
+  // payload prevents older bundled routes from replacing the current modules
+  // during pnpm preinstall on Render.
+  if (relativePath === 'team/page.tsx' || relativePath === 'calendar/page.tsx') continue;
 
   let content = originalContent;
 
@@ -71,4 +71,4 @@ for (const [relativePath, originalContent] of Object.entries(files)) {
   writeFileSync(target, content, 'utf8');
 }
 
-console.log(`Materialized ${Object.keys(files).length - 1} generated Klyvero operational routes; team route preserved from source.`);
+console.log(`Materialized ${Object.keys(files).length - 2} generated Klyvero operational routes; team and calendar routes preserved from source.`);
