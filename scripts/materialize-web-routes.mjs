@@ -20,6 +20,8 @@ for (const [relativePath, originalContent] of Object.entries(files)) {
   let content = originalContent;
 
   if (relativePath === 'inbox/page.tsx') {
+    const endpoints = [...originalContent.matchAll(/api\(\s*[`'\"]([^`'\"]+)/g)].map((match) => match[1]);
+    console.log(`Inbox compatibility endpoints: ${[...new Set(endpoints)].join(', ') || 'none'}`);
     content = content.replace('setSelected(s=>', 'setSelected((s:any)=>');
   }
 
