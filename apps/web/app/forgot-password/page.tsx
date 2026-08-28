@@ -5,6 +5,8 @@ import Link from 'next/link';
 import { api } from '../../lib/api';
 import { applyBranding, DEFAULT_LOGO_URL, ResolvedBranding } from '../../lib/branding';
 
+const GENERIC_ERROR = 'Não foi possível processar a solicitação. Tente novamente em alguns minutos.';
+
 export default function ForgotPasswordPage() {
   const [brand, setBrand] = useState<ResolvedBranding | null>(null);
   const [email, setEmail] = useState('');
@@ -32,6 +34,7 @@ export default function ForgotPasswordPage() {
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (busy) return;
+
     setBusy(true);
     setError('');
 
@@ -43,9 +46,12 @@ export default function ForgotPasswordPage() {
           email: email.trim().toLowerCase(),
         }),
       });
+
+      // Deliberately show the same result whether the account exists or not.
+      // Account enumeration must be prevented by the API as well.
       setSent(true);
     } catch {
-      setError('Não foi possível processar a solicitação. Confira os dados e tente novamente.');
+      setError(GENERIC_ERROR);
     } finally {
       setBusy(false);
     }
@@ -66,17 +72,17 @@ export default function ForgotPasswordPage() {
           <>
             <h1>Verifique seu e-mail</h1>
             <p className="muted">
-              Se existir uma conta para esse endereço, enviamos um link para criar uma nova senha.
+              Se houver uma conta associada aos dados informados, enviaremos um link para criar uma nova senha.
             </p>
             <p className="muted center">
-              O link é temporário e pode ser usado uma única vez.
+              Por segurança, o link é temporário e só pode ser usado uma vez.
             </p>
             <Link className="btn primary full" href="/login">Voltar para o login</Link>
           </>
         ) : (
           <>
             <h1>Recuperar senha</h1>
-            <p className="muted">Informe seu workspace e e-mail para receber um link seguro.</p>
+            <p className="muted">Informe seu workspace e e-mail. Se houver uma conta, enviaremos um link seguro.</p>
 
             {!brand?.tenant?.slug && (
               <div className="field">
@@ -87,6 +93,7 @@ export default function ForgotPasswordPage() {
                   placeholder="sua-empresa"
                   autoCapitalize="none"
                   autoComplete="organization"
+                  spellCheck={false}
                   required
                   disabled={busy}
                 />
@@ -100,6 +107,8 @@ export default function ForgotPasswordPage() {
                 onChange={(event) => setEmail(event.target.value)}
                 type="email"
                 autoComplete="email"
+                inputMode="email"
+                spellCheck={false}
                 required
                 disabled={busy}
               />
@@ -111,6 +120,9 @@ export default function ForgotPasswordPage() {
               {busy ? 'Enviando…' : 'Enviar link de recuperação'}
             </button>
 
+            <p className="muted center">
+              O link recebido expira automaticamente e não pode ser reutilizado.
+            </p>
             <p className="muted center">
               <Link href="/login">Voltar para o login</Link>
             </p>
