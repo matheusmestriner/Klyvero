@@ -128,6 +128,10 @@ export default function Login() {
           <input name="password" type="password" autoComplete="current-password" required disabled={busy} />
         </div>
 
+        <div className="login-forgot">
+          <a href="/forgot-password">Esqueci minha senha</a>
+        </div>
+
         {error && <div className="error" role="alert">{error}</div>}
 
         <button className="btn primary full" disabled={busy}>
