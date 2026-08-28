@@ -82,3 +82,13 @@ services:
         value: 'false'
       - key: ALLOW_PRIVATE_WEBHOOKS
         value: 'false'
+      - key: SMTP_DEFAULT_HOST
+        sync: false
+      - key: SMTP_DEFAULT_PORT
+        value: '587'
+      - key: SMTP_DEFAULT_SECURE
+        value: 'false'
+      - key: SMTP_DEFAULT_USER
+        sync: false
+      - key: SMTP_DEFAULT_PASS
+        sync: false
