@@ -10,6 +10,20 @@ type BootstrapStatus = {
   available?: boolean;
 };
 
+function safeLoginError(error: unknown) {
+  const message = error instanceof Error ? error.message.toLowerCase() : '';
+
+  if (message.includes('workspace') || message.includes('tenant')) {
+    return 'Workspace não encontrado. Confira o slug do workspace.';
+  }
+
+  if (message.includes('invalid') || message.includes('credentials') || message.includes('password') || message.includes('unauthorized')) {
+    return 'E-mail ou senha inválidos. Confira seus dados e tente novamente.';
+  }
+
+  return 'Não foi possível entrar. Confira workspace, e-mail e senha.';
+}
+
 export default function Login() {
   const [error, setError] = useState('');
   const [brand, setBrand] = useState<ResolvedBranding | null>(null);
@@ -49,6 +63,7 @@ export default function Login() {
 
     api('/auth/refresh', { method: 'POST' })
       .then((data) => {
+        if (!data?.accessToken) return;
         session.set(data.accessToken);
         router.replace('/app');
       })
@@ -63,13 +78,14 @@ export default function Login() {
     setError('');
 
     const form = new FormData(event.currentTarget);
+    const tenantSlug = String(form.get('tenantSlug') || '').trim().toLowerCase();
 
     try {
       const data = await api('/auth/login', {
         method: 'POST',
         body: JSON.stringify({
-          tenantSlug: brand?.tenant?.slug || form.get('tenantSlug'),
-          email: form.get('email'),
+          tenantSlug,
+          email: String(form.get('email') || '').trim().toLowerCase(),
           password: form.get('password'),
         }),
       });
@@ -77,8 +93,8 @@ export default function Login() {
       if (!data?.accessToken) throw new Error('missing_access_token');
       session.set(data.accessToken);
       router.replace('/app');
-    } catch {
-      setError('Não foi possível entrar. Verifique workspace, e-mail e senha.');
+    } catch (loginError) {
+      setError(safeLoginError(loginError));
       setBusy(false);
     }
   }
@@ -88,6 +104,7 @@ export default function Login() {
   const title = branding?.loginTitle || 'Acesse seu workspace';
   const subtitle = branding?.loginSubtitle || 'Prospecção, cadências, CRM, WhatsApp e IA no mesmo lugar.';
   const logoUrl = branding?.logoUrl || DEFAULT_LOGO_URL;
+  const resolvedTenantSlug = brand?.tenant?.slug || '';
 
   const loginStyle = useMemo(
     () =>
@@ -111,21 +128,29 @@ export default function Login() {
         <h1>{title}</h1>
         <p className="muted">{subtitle}</p>
 
-        {!brand?.tenant?.slug && (
-          <div className="field">
-            <label>Workspace</label>
-            <input name="tenantSlug" placeholder="sua-empresa" autoCapitalize="none" autoComplete="organization" required disabled={busy} />
-          </div>
-        )}
-
         <div className="field">
-          <label>E-mail</label>
-          <input name="email" type="email" autoComplete="email" required disabled={busy} />
+          <label htmlFor="tenantSlug">Workspace</label>
+          <input
+            id="tenantSlug"
+            name="tenantSlug"
+            placeholder="sua-empresa"
+            defaultValue={resolvedTenantSlug}
+            autoCapitalize="none"
+            autoComplete="organization"
+            spellCheck={false}
+            required
+            disabled={busy}
+          />
         </div>
 
         <div className="field">
-          <label>Senha</label>
-          <input name="password" type="password" autoComplete="current-password" required disabled={busy} />
+          <label htmlFor="email">E-mail</label>
+          <input id="email" name="email" type="email" autoComplete="email" required disabled={busy} />
+        </div>
+
+        <div className="field">
+          <label htmlFor="password">Senha</label>
+          <input id="password" name="password" type="password" autoComplete="current-password" required disabled={busy} />
         </div>
 
         <div className="login-forgot">
