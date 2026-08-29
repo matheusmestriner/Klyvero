@@ -27,6 +27,15 @@ function emitAuthExpired() {
   }
 }
 
+function isPublicAuthPath(path: string) {
+  return (
+    path === '/auth/login' ||
+    path === '/auth/forgot-password' ||
+    path === '/auth/reset-password' ||
+    path === '/auth/bootstrap'
+  );
+}
+
 async function readError(response: Response) {
   const text = await response.text();
   if (!text) return `HTTP ${response.status}`;
@@ -75,7 +84,9 @@ async function request(path: string, init: RequestInit, allowRefresh: boolean) {
     },
   });
 
-  if (response.status === 401 && path !== '/auth/refresh' && allowRefresh) {
+  const publicAuthPath = isPublicAuthPath(path);
+
+  if (response.status === 401 && path !== '/auth/refresh' && allowRefresh && !publicAuthPath) {
     try {
       await refreshAccessToken();
       return request(path, init, false);
@@ -87,7 +98,9 @@ async function request(path: string, init: RequestInit, allowRefresh: boolean) {
   }
 
   if (!response.ok) {
-    if (response.status === 401 && path !== '/auth/refresh') {
+    // Public authentication flows must surface their own errors instead of
+    // being interpreted as an expired authenticated session.
+    if (response.status === 401 && !publicAuthPath && path !== '/auth/refresh') {
       token = '';
       emitAuthExpired();
     }
