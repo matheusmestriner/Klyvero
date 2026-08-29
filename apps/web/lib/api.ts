@@ -32,7 +32,8 @@ function isPublicAuthPath(path: string) {
     path === '/auth/login' ||
     path === '/auth/forgot-password' ||
     path === '/auth/reset-password' ||
-    path === '/auth/bootstrap'
+    path === '/auth/bootstrap' ||
+    path.startsWith('/branding/resolve/domain/')
   );
 }
 
@@ -98,8 +99,8 @@ async function request(path: string, init: RequestInit, allowRefresh: boolean) {
   }
 
   if (!response.ok) {
-    // Public authentication flows must surface their own errors instead of
-    // being interpreted as an expired authenticated session.
+    // Public authentication and branding resolution flows must surface their
+    // own errors instead of being interpreted as an expired authenticated session.
     if (response.status === 401 && !publicAuthPath && path !== '/auth/refresh') {
       token = '';
       emitAuthExpired();
