@@ -12,7 +12,9 @@
       "resizeMode": "contain",
       "backgroundColor": "#f6f6f7"
     },
-    "assetBundlePatterns": ["**/*"],
+    "assetBundlePatterns": [
+      "**/*"
+    ],
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.klyvero.app"
@@ -27,9 +29,12 @@
     "extra": {
       "apiUrl": "https://klyvero-api-free.onrender.com/api/v1",
       "eas": {
-        "projectId": ""
+        "projectId": "7e4734bd-a9d6-443c-807b-5d8686459ade"
       }
     },
-    "plugins": ["expo-secure-store"]
+    "plugins": [
+      "expo-secure-store"
+    ],
+    "owner": "klyvero"
   }
 }
