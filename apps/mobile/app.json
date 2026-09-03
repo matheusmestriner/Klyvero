@@ -1,0 +1,35 @@
+{
+  "expo": {
+    "name": "Klyvero",
+    "slug": "klyvero",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./src/assets/klyvero-mark.png",
+    "userInterfaceStyle": "automatic",
+    "scheme": "klyvero",
+    "splash": {
+      "image": "./src/assets/klyvero-mark.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#f6f6f7"
+    },
+    "assetBundlePatterns": ["**/*"],
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.klyvero.app"
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./src/assets/klyvero-mark.png",
+        "backgroundColor": "#101114"
+      },
+      "package": "com.klyvero.app"
+    },
+    "extra": {
+      "apiUrl": "https://klyvero-api-free.onrender.com/api/v1",
+      "eas": {
+        "projectId": ""
+      }
+    },
+    "plugins": ["expo-secure-store"]
+  }
+}
