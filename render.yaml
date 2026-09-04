@@ -11,7 +11,7 @@ services:
       rm -rf .api-runtime &&
       mkdir .api-runtime &&
       cat deploy/api-source-v2.b64.* | base64 -d > /tmp/klyvero-api.tgz &&
-      echo 'a8bb4469179a3791115480eeb5c2702616413edb67ec7a0d75c0e40da8c5b0e2  /tmp/klyvero-api.tgz' | sha256sum -c - &&
+      echo '84db17de3e0cbc7c9b23728675ff9cf4d62ceed77c8cb487a877d4806bd4b987  /tmp/klyvero-api.tgz' | sha256sum -c - &&
       tar -xzf /tmp/klyvero-api.tgz -C .api-runtime &&
       cd .api-runtime &&
       pnpm install --no-frozen-lockfile &&
