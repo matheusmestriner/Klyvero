@@ -1,7 +1,7 @@
 import Constants from 'expo-constants';
 import * as SecureStore from 'expo-secure-store';
 
-const BASE: string = (Constants.expoConfig?.extra as any)?.apiUrl ?? 'https://klyvero-api-free.onrender.com/api/v1';
+const BASE: string = (Constants.expoConfig?.extra as any)?.apiUrl ?? 'https://klyvero-api-v6-free.onrender.com/api/v1';
 
 const TOKEN_KEY = 'klyvero.accessToken';
 const TENANT_KEY = 'klyvero.tenantSlug';
