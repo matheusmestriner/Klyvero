@@ -10,6 +10,14 @@ type BootstrapStatus = {
   available?: boolean;
 };
 
+type LoginStage = 'connecting' | 'authenticating' | 'redirecting';
+
+const STAGE_LABEL: Record<LoginStage, string> = {
+  connecting: 'Conectando ao servidor…',
+  authenticating: 'Verificando suas credenciais…',
+  redirecting: 'Tudo certo! Carregando seu workspace…',
+};
+
 function safeLoginError(error: unknown) {
   const message = error instanceof Error ? error.message.toLowerCase() : '';
 
@@ -24,11 +32,27 @@ function safeLoginError(error: unknown) {
   return 'Não foi possível entrar. Confira workspace, e-mail e senha.';
 }
 
+function LoginLoadingScreen({ stage, logoUrl, productName }: { stage: LoginStage; logoUrl: string; productName: string }) {
+  return (
+    <div className="login-loading" role="status" aria-live="polite">
+      <div className="login-loading-mark">
+        <img className="brand-logo compact" src={logoUrl} alt={productName} />
+      </div>
+      <span className="login-loading-spinner" aria-hidden="true" />
+      <p className="login-loading-status">{STAGE_LABEL[stage]}</p>
+      <div className="login-loading-progress" aria-hidden="true">
+        <span />
+      </div>
+    </div>
+  );
+}
+
 export default function Login() {
   const [error, setError] = useState('');
   const [brand, setBrand] = useState<ResolvedBranding | null>(null);
   const [bootstrapAvailable, setBootstrapAvailable] = useState(false);
   const [busy, setBusy] = useState(false);
+  const [stage, setStage] = useState<LoginStage>('connecting');
   const router = useRouter();
 
   useEffect(() => {
@@ -75,10 +99,15 @@ export default function Login() {
     if (busy) return;
 
     setBusy(true);
+    setStage('connecting');
     setError('');
 
     const form = new FormData(event.currentTarget);
     const tenantSlug = String(form.get('tenantSlug') || '').trim().toLowerCase();
+
+    // The request itself has no sub-progress to report, so "authenticating" is a timed
+    // hand-off from "connecting" — cleared as soon as the real response arrives.
+    const authenticatingTimer = setTimeout(() => setStage('authenticating'), 550);
 
     try {
       const data = await api('/auth/login', {
@@ -90,10 +119,13 @@ export default function Login() {
         }),
       });
 
+      clearTimeout(authenticatingTimer);
       if (!data?.accessToken) throw new Error('missing_access_token');
       session.set(data.accessToken);
+      setStage('redirecting');
       router.replace('/app');
     } catch (loginError) {
+      clearTimeout(authenticatingTimer);
       setError(safeLoginError(loginError));
       setBusy(false);
     }
@@ -118,6 +150,10 @@ export default function Login() {
     [branding?.loginBackgroundUrl],
   );
 
+  if (busy) {
+    return <LoginLoadingScreen stage={stage} logoUrl={logoUrl} productName={productName} />;
+  }
+
   return (
     <div className="login" style={loginStyle}>
       <form className="login-card" onSubmit={submit}>
@@ -139,18 +175,17 @@ export default function Login() {
             autoComplete="organization"
             spellCheck={false}
             required
-            disabled={busy}
           />
         </div>
 
         <div className="field">
           <label htmlFor="email">E-mail</label>
-          <input id="email" name="email" type="email" autoComplete="email" required disabled={busy} />
+          <input id="email" name="email" type="email" autoComplete="email" required />
         </div>
 
         <div className="field">
           <label htmlFor="password">Senha</label>
-          <input id="password" name="password" type="password" autoComplete="current-password" required disabled={busy} />
+          <input id="password" name="password" type="password" autoComplete="current-password" required />
         </div>
 
         <div className="login-forgot">
@@ -159,9 +194,7 @@ export default function Login() {
 
         {error && <div className="error" role="alert">{error}</div>}
 
-        <button className="btn primary full" disabled={busy}>
-          {busy ? 'Entrando…' : 'Entrar'}
-        </button>
+        <button className="btn primary full">Entrar</button>
 
         {bootstrapAvailable && (
           <p className="muted center">
