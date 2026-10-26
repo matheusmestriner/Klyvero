@@ -14,7 +14,7 @@ const root = process.cwd();
 const deploy = join(root, 'deploy');
 
 // Keep in sync with scripts/materialize-web-routes.mjs: these pages come from git, not from the payload.
-const SOURCE_MANAGED = new Set(['team/page.tsx', 'calendar/page.tsx', 'whatsapp/page.tsx', 'inbox/page.tsx', 'email/page.tsx', 'billing/page.tsx', 'prospecting/page.tsx', 'ai/page.tsx']);
+const SOURCE_MANAGED = new Set(['team/page.tsx', 'calendar/page.tsx', 'whatsapp/page.tsx', 'inbox/page.tsx', 'email/page.tsx', 'billing/page.tsx', 'prospecting/page.tsx', 'ai/page.tsx', 'campaigns/page.tsx']);
 
 function parts(prefix) {
   return readdirSync(deploy)
