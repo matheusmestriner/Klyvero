@@ -1,4 +1,4 @@
-import { IsEmail, IsString, Matches, MaxLength, MinLength } from 'class-validator';
+import { IsEmail, IsOptional, IsString, Matches, MaxLength, MinLength } from 'class-validator';
 
 export class LoginDto {
   @IsEmail() @MaxLength(254) email!: string;
@@ -32,4 +32,9 @@ export class OwnerRecoveryDto {
   @IsEmail() @MaxLength(254) email!: string;
   @IsString() @MinLength(16) @MaxLength(256) recoveryCode!: string;
   @IsString() @MinLength(12) @MaxLength(128) password!: string;
+}
+
+/** Native apps keep the refresh token in the device's secure storage and send it in the body. */
+export class RefreshDto {
+  @IsOptional() @IsString() @MaxLength(256) refreshToken?: string;
 }

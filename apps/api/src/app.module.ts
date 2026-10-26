@@ -35,6 +35,8 @@ import { CalendarIntegrationModule } from './modules/calendar-integration/calend
 import { BillingModule } from './modules/billing/billing.module';
 import { ApiKeysModule } from './modules/api-keys/api-keys.module';
 import { NotificationsModule } from './modules/notifications/notifications.module';
+import { PushModule } from './modules/push/push.module';
+import { InboxModule } from './modules/inbox/inbox.module';
 
 @Module({
   imports: [
@@ -44,7 +46,7 @@ import { NotificationsModule } from './modules/notifications/notifications.modul
     HealthModule, AuthModule, TenantsModule, BrandingModule, CrudModule, CrmModule,
     WhatsappModule, AnalyticsModule, AiModule, ProspectingModule, EmailModule,
     CampaignsModule, WebhooksModule, CalendarIntegrationModule, BillingModule,
-    ApiKeysModule, NotificationsModule,
+    ApiKeysModule, NotificationsModule, PushModule, InboxModule,
   ],
   providers: [
     // Edge limiter intentionally runs before authentication so malformed/invalid

@@ -6,11 +6,12 @@ import { WhatsappConnectDto } from './dto/connect.dto';
 import { SendWhatsappMessageDto } from './dto/send-message.dto';
 import { WhatsappInternalEventDto } from './dto/internal-event.dto';
 import { digitsOf, phoneKey } from '../../common/phone';
+import { InboundNotifier } from '../notifications/inbound-notifier';
 
 @Injectable()
 export class WhatsappService {
   private readonly logger = new Logger(WhatsappService.name);
-  constructor(private readonly config: ConfigService, private readonly prisma: PrismaService) {}
+  constructor(private readonly config: ConfigService, private readonly prisma: PrismaService, private readonly notifier: InboundNotifier) {}
 
   private baseUrl() {
     const configured = this.config.get<string>('WHATSAPP_SERVICE_URL');
@@ -124,6 +125,7 @@ export class WhatsappService {
       throw error;
     }
     await this.prisma.messageThread.update({ where: { id: thread.id }, data: { lastMessageAt: receivedAt } });
+    await this.notifier.messageReceived(tenantId, { channel: 'WHATSAPP', threadId: thread.id, from: contact.firstName || event.pushName || `+${phone}`, preview: event.text });
     const leads = await this.leadsByPhone(tenantId, phone);
     if (leads.length) {
       const leadIds = leads.map((lead) => lead.id);

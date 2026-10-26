@@ -15,6 +15,7 @@ import { RedisService } from '../../infra/redis/redis.service';
 import { NetworkSafetyService } from '../../infra/security/network-safety.service';
 import { constantTimeSecretEquals } from '../../common/constant-time';
 import { UsageService } from '../usage/usage.service';
+import { InboundNotifier } from '../notifications/inbound-notifier';
 import { InboundEmailDto, MailboxDto, SendEmailDto } from './dto';
 
 @Injectable()
@@ -28,6 +29,7 @@ export class EmailService {
     private readonly usage: UsageService,
     private readonly redis: RedisService,
     private readonly network: NetworkSafetyService,
+    private readonly notifier: InboundNotifier,
   ) {}
 
   listMailboxes(tenantId: string) {
@@ -379,6 +381,7 @@ export class EmailService {
       throw error;
     }
     await this.prisma.messageThread.update({ where: { id: thread.id }, data: { lastMessageAt: new Date() } });
+    await this.notifier.messageReceived(dto.tenantId, { channel: 'EMAIL', threadId: thread.id, from: contact.firstName || email, preview: dto.text ?? dto.subject });
 
     const leads = await this.prisma.lead.findMany({ where: { tenantId: dto.tenantId, email } });
     if (leads.length) {
