@@ -10,8 +10,8 @@ services:
     buildCommand: >-
       rm -rf .api-runtime &&
       mkdir .api-runtime &&
-      cat deploy/api-source-v3.b64.* | base64 -d > /tmp/klyvero-api.tgz &&
-      echo '8008fe53c084f7161a7bb517100977c9c298e9cb57f333816dd89bd10e4d37ec  /tmp/klyvero-api.tgz' | sha256sum -c - &&
+      cat deploy/api-source-v2.b64.* | base64 -d > /tmp/klyvero-api.tgz &&
+      sha256sum -c deploy/api-source-v2.sha256 &&
       tar -xzf /tmp/klyvero-api.tgz -C .api-runtime &&
       cd .api-runtime &&
       pnpm install --no-frozen-lockfile &&
@@ -35,11 +35,11 @@ services:
         fromDatabase:
           name: klyvero-db-free
           property: connectionString
-      # No Redis/WhatsApp bridge service is deployed yet. RedisService fails
-      # fast (enableOfflineQueue: false) and every caller already falls back
-      # to in-memory limiting, so the app runs without REDIS_URL -- queue
-      # workers just stay disabled (RUN_QUEUE_WORKERS=false) until a real
-      # Key Value instance is provisioned.
+      # No Redis or WhatsApp bridge service is deployed yet. RedisService
+      # fails fast (enableOfflineQueue: false) and every caller already
+      # falls back to in-memory limiting, so the app runs without REDIS_URL
+      # -- queue workers stay disabled (RUN_QUEUE_WORKERS=false) until a
+      # real Key Value instance is provisioned.
       - key: WHATSAPP_INTERNAL_TOKEN
         generateValue: true
       - key: BOOTSTRAP_ENABLED
