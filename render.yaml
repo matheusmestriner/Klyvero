@@ -84,3 +84,9 @@ services:
         sync: false
       - key: SMTP_DEFAULT_PASS
         sync: false
+      # Remetente dos e-mails de sistema (recuperação de senha). Se vazio, usa SMTP_DEFAULT_USER quando for um e-mail.
+      - key: SMTP_DEFAULT_FROM
+        sync: false
+      # Chave de recuperação administrativa de OWNER (/owner-recovery). Mínimo 32 caracteres; vazio = recurso desligado.
+      - key: OWNER_RECOVERY_CODE
+        sync: false
