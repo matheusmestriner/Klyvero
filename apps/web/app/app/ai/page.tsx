@@ -1,7 +1,7 @@
 'use client';
 
 import { FormEvent, useEffect, useMemo, useState } from 'react';
-import { api } from '../../../lib/api';
+import { api, session } from '../../../lib/api';
 import { Icon } from '../../../components/icon';
 import { PageTitle } from '../../../components/resource-page';
 
@@ -146,6 +146,30 @@ export default function AiAgentsPage() {
     }
   }
 
+  // Same geographic search used by the Prospecção page (Next route over OpenStreetMap).
+  // The API's POST /prospecting/search is a different feature (external provider that
+  // stores prospects and answers {jobId, resultCount}), so it cannot feed this screen.
+  async function searchRegion(searchBody: Record<string, unknown>, retry = true): Promise<any> {
+    const response = await fetch('/api/prospecting/search', {
+      method: 'POST',
+      headers: {
+        'content-type': 'application/json',
+        ...(session.get() ? { authorization: `Bearer ${session.get()}` } : {}),
+      },
+      body: JSON.stringify(searchBody),
+    });
+
+    if (response.status === 401 && retry) {
+      const refreshed = await api('/auth/refresh', { method: 'POST' });
+      session.set(refreshed.accessToken);
+      return searchRegion(searchBody, false);
+    }
+
+    const payload = await response.json().catch(() => ({}));
+    if (!response.ok) throw new Error(payload?.message || payload?.error || `HTTP ${response.status}`);
+    return payload;
+  }
+
   async function runAgent(agent: ProspectingAgent) {
     if (runningId) return;
     setRunningId(agent.id);
@@ -160,18 +184,12 @@ export default function AiAgentsPage() {
         const { city, state } = parseLocation(location);
         if (!city) continue;
 
-        const payload = await api('/prospecting/search', {
-          method: 'POST',
-          body: JSON.stringify({
-            query: agent.businessType,
-            businessType: agent.businessType,
-            industry: agent.businessType,
-            country: 'BR',
-            state,
-            city,
-            radiusKm: agent.radiusKm,
-            limit: agent.limitPerLocation,
-          }),
+        const payload = await searchRegion({
+          businessType: agent.businessType,
+          state,
+          city,
+          radiusKm: agent.radiusKm,
+          limit: agent.limitPerLocation,
         });
 
         normalizeCompanies(payload, location).forEach((company) => collected.push(company));
