@@ -7,6 +7,22 @@ permissions:
 jobs:
   repository-guard:
     runs-on: ubuntu-latest
+    env:
+      PGPASS: klyvero-ci-only
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: klyvero
+          POSTGRES_PASSWORD: klyvero-ci-only
+          POSTGRES_DB: klyvero
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U klyvero -d klyvero"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 12
     steps:
       - uses: actions/checkout@v4
         with:
@@ -46,6 +62,14 @@ jobs:
         run: pnpm --filter @klyvero/api build
       - name: Test API
         run: pnpm --filter @klyvero/api test
+      - name: Apply schema to the CI database
+        run: pnpm --filter @klyvero/api db:push
+        env:
+          DATABASE_URL: postgresql://klyvero:${{ env.PGPASS }}@localhost:5432/klyvero?schema=public
+      - name: API end-to-end tests (campaigns)
+        run: pnpm --filter @klyvero/api test:e2e
+        env:
+          DATABASE_URL: postgresql://klyvero:${{ env.PGPASS }}@localhost:5432/klyvero?schema=public
       - name: Type-check web application
         run: pnpm --filter @klyvero/web lint
       - name: Build web application

@@ -1,9 +1,15 @@
-import { ArrayMaxSize, IsArray, IsEnum, IsInt, IsOptional, IsString, IsUUID, Max, MaxLength, Min, MinLength } from 'class-validator';
-import { CampaignChannel, MessageChannel } from '@prisma/client';
+import { ArrayMaxSize, ArrayMinSize, IsArray, IsEnum, IsInt, IsOptional, IsString, IsUUID, Max, MaxLength, Min, MinLength } from 'class-validator';
+import { CampaignChannel, EnrollmentStatus, MessageChannel } from '@prisma/client';
 
 export class CreateCampaignDto {
   @IsString() @MinLength(2) @MaxLength(160) name!: string;
   @IsEnum(CampaignChannel) channel!: CampaignChannel;
+  @IsOptional() @IsString() @MaxLength(5000) description?: string;
+  @IsOptional() @IsUUID() emailMailboxId?: string;
+}
+
+export class UpdateCampaignDto {
+  @IsOptional() @IsString() @MinLength(2) @MaxLength(160) name?: string;
   @IsOptional() @IsString() @MaxLength(5000) description?: string;
   @IsOptional() @IsUUID() emailMailboxId?: string;
 }
@@ -17,5 +23,10 @@ export class SequenceStepDto {
 }
 
 export class EnrollDto {
-  @IsArray() @ArrayMaxSize(5000) @IsUUID('4', { each: true }) leadIds!: string[];
+  @IsArray() @ArrayMinSize(1) @ArrayMaxSize(1000) @IsUUID('4', { each: true }) leadIds!: string[];
+}
+
+export class EnrollmentsQueryDto {
+  @IsOptional() @IsEnum(EnrollmentStatus) status?: EnrollmentStatus;
+  @IsOptional() @IsInt() @Min(1) @Max(500) take?: number;
 }

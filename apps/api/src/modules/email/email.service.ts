@@ -154,11 +154,18 @@ export class EmailService {
     reason: SuppressionReason = 'MANUAL',
     source = 'manual',
   ) {
-    return this.prisma.suppressionEntry.upsert({
-      where: { tenantId_email: { tenantId, email: email.toLowerCase() } },
-      create: { tenantId, email: email.toLowerCase(), reason, source },
+    const normalized = email.toLowerCase();
+    const entry = await this.prisma.suppressionEntry.upsert({
+      where: { tenantId_email: { tenantId, email: normalized } },
+      create: { tenantId, email: normalized, reason, source },
       update: { reason, source },
     });
+    // Whoever opted out must not receive the next step of any running sequence.
+    await this.prisma.sequenceEnrollment.updateMany({
+      where: { tenantId, status: { in: ['ACTIVE', 'PAUSED'] }, lead: { email: { equals: normalized, mode: 'insensitive' } } },
+      data: { status: 'STOPPED', nextRunAt: null, lastError: 'Destinatário descadastrado' },
+    });
+    return entry;
   }
 
   suppressions(tenantId: string) {
@@ -237,6 +244,9 @@ export class EmailService {
     const publicUrl = this.config.get<string>('API_PUBLIC_URL') ?? 'http://localhost:4000';
     const openSig = this.signature(message.id);
     const unsubscribe = `${publicUrl}/api/v1/email/unsubscribe/${this.unsubscribeToken(tenantId, to)}`;
+    const text = dto.includeUnsubscribeFooter && dto.text
+      ? `${dto.text}\n\n--\nPara não receber mais e-mails como este: ${unsubscribe}`
+      : dto.text;
     const html = dto.html
       ? `${dto.html}<p style="font-size:12px;color:#888"><a href="${unsubscribe}">Cancelar inscrição</a></p><img alt="" width="1" height="1" src="${publicUrl}/api/v1/email/track/open/${message.id}/${openSig}"/>`
       : undefined;
@@ -247,7 +257,7 @@ export class EmailService {
         replyTo: mailbox.replyTo ?? undefined,
         to,
         subject: dto.subject,
-        text: dto.text,
+        text,
         html,
         headers: {
           'List-Unsubscribe': `<${unsubscribe}>`,
@@ -377,7 +387,7 @@ export class EmailService {
         where: {
           tenantId: dto.tenantId,
           leadId: { in: leads.map((lead) => lead.id) },
-          status: 'ACTIVE',
+          status: { in: ['ACTIVE', 'PAUSED'] },
         },
         data: { status: 'REPLIED', repliedAt: new Date(), nextRunAt: null },
       });
