@@ -17,5 +17,10 @@
     "security:audit": "pnpm audit --audit-level high",
     "runtime:validate": "node scripts/validate-runtime-artifacts.mjs",
     "launch:check": "node scripts/launch-readiness.mjs"
+  },
+  "devDependencies": {
+    "react": "19.1.1",
+    "react-dom": "19.1.1",
+    "@types/react": "19.1.12"
   }
 }

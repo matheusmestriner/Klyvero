@@ -157,3 +157,92 @@ html[data-theme="light"] .login-card .login-legal span{
     font-size:25px;
   }
 }
+
+/* Full-screen login loading state (replaces the old "Entrando…" button text). */
+.login-loading{
+  position:fixed;
+  inset:0;
+  z-index:200;
+  display:grid;
+  place-items:center;
+  gap:22px;
+  padding:24px;
+  text-align:center;
+  background:var(--bg);
+}
+
+.login-loading-mark{
+  width:64px;
+  height:64px;
+  display:grid;
+  place-items:center;
+  border-radius:18px;
+  background:var(--card);
+  border:1px solid var(--border);
+  box-shadow:0 18px 50px color-mix(in srgb,var(--p) 22%,transparent);
+  animation:klyvero-login-pulse 1.8s ease-in-out infinite;
+}
+
+.login-loading-mark img{
+  width:34px;
+  height:34px;
+}
+
+.login-loading-spinner{
+  width:32px;
+  height:32px;
+  border:3px solid color-mix(in srgb,var(--p) 18%,var(--border));
+  border-top-color:var(--p);
+  border-radius:999px;
+  animation:klyvero-login-spin .8s linear infinite;
+}
+
+.login-loading-status{
+  margin:0;
+  min-height:20px;
+  font-size:14px;
+  font-weight:650;
+  color:var(--text);
+}
+
+.login-loading-progress{
+  position:relative;
+  width:min(220px,70%);
+  height:4px;
+  border-radius:999px;
+  background:var(--border);
+  overflow:hidden;
+}
+
+.login-loading-progress span{
+  position:absolute;
+  top:0;
+  left:-35%;
+  width:35%;
+  height:100%;
+  border-radius:999px;
+  background:var(--p);
+  animation:klyvero-login-progress 1.2s ease-in-out infinite;
+}
+
+@keyframes klyvero-login-spin{
+  to{ transform:rotate(360deg); }
+}
+
+@keyframes klyvero-login-pulse{
+  0%,100%{ transform:scale(1); box-shadow:0 18px 50px color-mix(in srgb,var(--p) 22%,transparent); }
+  50%{ transform:scale(1.05); box-shadow:0 22px 60px color-mix(in srgb,var(--p) 34%,transparent); }
+}
+
+@keyframes klyvero-login-progress{
+  0%{ left:-35%; }
+  100%{ left:100%; }
+}
+
+@media(prefers-reduced-motion:reduce){
+  .login-loading-mark,
+  .login-loading-spinner,
+  .login-loading-progress span{
+    animation-duration:2.4s;
+  }
+}
