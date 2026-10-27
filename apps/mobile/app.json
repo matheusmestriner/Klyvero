@@ -44,7 +44,15 @@
       ]
     ],
     "extra": {
-      "apiUrl": "https://klyvero-api-v6-free.onrender.com"
+      "apiUrl": "https://klyvero-api-v6-free.onrender.com",
+      "router": {
+        "asyncRoutes": {
+          "web": true
+        }
+      },
+      "eas": {
+        "projectId": "7e4734bd-a9d6-443c-807b-5d8686459ade"
+      }
     }
   }
 }
