@@ -9,7 +9,7 @@
     "test": "jest --passWithNoTests",
     "lint": "tsc --noEmit",
     "prisma:generate": "prisma generate",
-    "prisma:migrate": "prisma db push --skip-generate",
+    "prisma:migrate": "prisma migrate deploy",
     "db:push": "prisma db push --skip-generate",
     "prisma:seed": "tsx prisma/seed.ts",
     "prisma:migration:create": "prisma migrate dev --name baseline",

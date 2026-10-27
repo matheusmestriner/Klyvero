@@ -28,7 +28,11 @@ type SearchMeta = {
   radiusKm: number;
   total: number;
   generatedAt?: string;
+  source?: 'browser' | 'manual';
+  accuracyM?: number;
 };
+
+type GeoPoint = { latitude: number; longitude: number; accuracy: number };
 
 type ContactFilter = 'ALL' | 'CONTACT' | 'EMAIL' | 'PHONE' | 'WEBSITE';
 type SortMode = 'SCORE' | 'DISTANCE' | 'NAME';
@@ -66,6 +70,8 @@ export default function ProspectingPage() {
   const [saving, setSaving] = useState<Set<string>>(new Set());
   const [bulkSaving, setBulkSaving] = useState(false);
   const [detail, setDetail] = useState<ProspectCompany | null>(null);
+  const [geoPoint, setGeoPoint] = useState<GeoPoint | null>(null);
+  const [locating, setLocating] = useState(false);
 
   useEffect(() => {
     try {
@@ -134,6 +140,60 @@ export default function ProspectingPage() {
     return `${results.length} empresa${results.length === 1 ? '' : 's'} encontrada${results.length === 1 ? '' : 's'} em até ${searchRadius} km de ${searchCity} / ${searchState}.`;
   }, [city, meta, radiusKm, results.length, searched, state]);
 
+  async function requestCurrentLocation() {
+    if (typeof window === 'undefined' || !window.isSecureContext) {
+      setError('A localização do navegador exige uma conexão HTTPS segura.');
+      return;
+    }
+
+    if (!('geolocation' in navigator)) {
+      setError('Este navegador não oferece suporte à localização. Informe cidade e estado manualmente.');
+      return;
+    }
+
+    if ('permissions' in navigator) {
+      try {
+        const permission = await navigator.permissions.query({ name: 'geolocation' });
+        if (permission.state === 'denied') {
+          setGeoPoint(null);
+          setError('A localização está bloqueada para este site. No navegador, abra as permissões do site ao lado do endereço, permita Localização e clique novamente em Usar minha localização.');
+          return;
+        }
+      } catch {
+        // Alguns navegadores não expõem o estado da permissão; o pedido abaixo continua normalmente.
+      }
+    }
+
+    setLocating(true);
+    setError('');
+    setNotice('');
+
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        setGeoPoint({
+          latitude: position.coords.latitude,
+          longitude: position.coords.longitude,
+          accuracy: position.coords.accuracy,
+        });
+        setLocating(false);
+        const accuracy = Number.isFinite(position.coords.accuracy) ? Math.round(position.coords.accuracy) : null;
+        setNotice(`Localização autorizada. A próxima busca usará sua posição atual como centro do raio${accuracy ? ` (precisão aproximada de ${accuracy} m)` : ''}. As coordenadas não são armazenadas no navegador.`);
+      },
+      (locationError) => {
+        setGeoPoint(null);
+        setLocating(false);
+        if (locationError.code === locationError.PERMISSION_DENIED) {
+          setError('Permissão de localização negada. Permita Localização nas configurações deste site e tente novamente. Você também pode pesquisar informando cidade e estado.');
+        } else if (locationError.code === locationError.TIMEOUT) {
+          setError('A localização demorou demais para responder. Tente novamente ou informe a região manualmente.');
+        } else {
+          setError('Não foi possível obter sua localização. Verifique se a localização do dispositivo está ativa e tente novamente.');
+        }
+      },
+      { enableHighAccuracy: false, timeout: 15000, maximumAge: 60000 },
+    );
+  }
+
   async function handleSearch(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const segment = businessType.trim();
@@ -143,8 +203,8 @@ export default function ProspectingPage() {
       setError('Informe o ramo de negócio que deseja prospectar.');
       return;
     }
-    if (targetCity.length < 2) {
-      setError('Informe a cidade da busca.');
+    if (!geoPoint && targetCity.length < 2) {
+      setError('Informe a cidade da busca ou use sua localização atual.');
       return;
     }
 
@@ -160,6 +220,9 @@ export default function ProspectingPage() {
         businessType: segment,
         state,
         city: targetCity,
+        latitude: geoPoint ? Number(geoPoint.latitude.toFixed(5)) : undefined,
+        longitude: geoPoint ? Number(geoPoint.longitude.toFixed(5)) : undefined,
+        accuracyM: geoPoint?.accuracy,
         radiusKm,
         limit,
       });
@@ -167,7 +230,13 @@ export default function ProspectingPage() {
       setResults(rows);
       setMeta(payload?.meta || null);
       setSearched(true);
-      window.localStorage.setItem('klyvero.prospecting.last-search', JSON.stringify({ businessType: segment, state, city: targetCity, radiusKm, limit }));
+      if (payload?.meta?.source === 'browser') {
+        if (typeof payload.meta.city === 'string' && payload.meta.city && payload.meta.city !== 'Sua localização') setCity(payload.meta.city);
+        if (typeof payload.meta.state === 'string' && /^[A-Z]{2}$/.test(payload.meta.state)) setState(payload.meta.state);
+      }
+      const rememberedCity = payload?.meta?.city && payload.meta.city !== 'Sua localização' ? payload.meta.city : targetCity;
+      const rememberedState = payload?.meta?.state || state;
+      window.localStorage.setItem('klyvero.prospecting.last-search', JSON.stringify({ businessType: segment, state: rememberedState, city: rememberedCity, radiusKm, limit }));
     } catch (err: any) {
       setResults([]);
       setMeta(null);
@@ -315,7 +384,7 @@ export default function ProspectingPage() {
           <div>
             <span className="eyebrow">Busca geográfica</span>
             <h3>Defina seu mercado-alvo</h3>
-            <p className="muted">A busca considera o segmento, a cidade, o raio e a disponibilidade de dados comerciais públicos.</p>
+            <p className="muted">Pesquise por cidade/estado ou autorize sua localização para usar seu ponto atual como centro real do raio selecionado.</p>
           </div>
           <span className="prospecting-status"><span /> Pesquisa protegida por sessão</span>
         </div>
@@ -327,13 +396,13 @@ export default function ProspectingPage() {
           </label>
           <label>
             <span>Estado</span>
-            <select value={state} onChange={(event) => setState(event.target.value)}>
+            <select value={state} onChange={(event) => { setState(event.target.value); setGeoPoint(null); }}>
               {BRAZIL_STATES.map(([uf, label]) => <option key={uf} value={uf}>{uf} — {label}</option>)}
             </select>
           </label>
           <label>
             <span>Cidade</span>
-            <input value={city} onChange={(event) => setCity(event.target.value)} placeholder="Ex.: Campinas" autoComplete="address-level2" maxLength={80} />
+            <input value={city} onChange={(event) => { setCity(event.target.value); setGeoPoint(null); }} placeholder="Ex.: Campinas" autoComplete="address-level2" maxLength={80} />
           </label>
           <label>
             <span>Raio</span>
@@ -347,6 +416,9 @@ export default function ProspectingPage() {
               {LIMIT_OPTIONS.map((value) => <option key={value} value={value}>{value} empresas</option>)}
             </select>
           </label>
+          <button className={`btn ghost prospecting-location-button ${geoPoint ? 'location-active' : ''}`} type="button" onClick={requestCurrentLocation} disabled={locating || loading}>
+            <Icon name="target" size={16} /> {locating ? 'Localizando…' : geoPoint ? 'Localização pronta' : 'Usar minha localização'}
+          </button>
           <button className="btn primary prospecting-search-button" type="submit" disabled={loading}>
             <Icon name="search" size={16} /> {loading ? 'Buscando empresas…' : 'Buscar empresas'}
           </button>
@@ -484,7 +556,7 @@ export default function ProspectingPage() {
         <section className="card empty-state prospecting-start-state">
           <Icon name="building" size={32} />
           <strong>Monte sua primeira lista de prospecção</strong>
-          <span>Defina segmento, estado, cidade e raio. Os resultados encontrados poderão ser qualificados, exportados ou enviados para Leads.</span>
+          <span>Defina segmento e região manualmente ou use sua localização atual. Os resultados reais poderão ser qualificados, exportados ou enviados para Leads.</span>
         </section>
       )}
 

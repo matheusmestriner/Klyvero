@@ -50,6 +50,7 @@ export default function InboxPage() {
   const [detailOpen, setDetailOpen] = useState(false);
   const [error, setError] = useState('');
   const [notice, setNotice] = useState('');
+  const [deletingId, setDeletingId] = useState('');
   const bodyRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -181,6 +182,56 @@ export default function InboxPage() {
     }
   }
 
+  // KLYVERO_INBOX_DELETE_V1
+  async function deleteStoredMessage(messageId: string) {
+    const encoded = encodeURIComponent(messageId);
+    try {
+      await api(`/inbox/messages/${encoded}`, { method: 'DELETE' });
+    } catch {
+      await api(`/inbox/${encoded}`, { method: 'DELETE' });
+    }
+  }
+
+  async function deleteMessage(item: Message) {
+    if (!selected || deletingId) return;
+    const direction = String(item.direction || '').toUpperCase() === 'OUTBOUND' ? 'enviada' : 'recebida';
+    if (!window.confirm(`Excluir esta mensagem ${direction}? Esta ação não pode ser desfeita.`)) return;
+
+    setDeletingId(`message:${item.id}`);
+    setError('');
+    setNotice('');
+    try {
+      await deleteStoredMessage(item.id);
+      setThreads((rows) => rows.map((thread) => thread.id === selected.id ? { ...thread, messages: (thread.messages || []).filter((message) => message.id !== item.id) } : thread));
+      setNotice('Mensagem excluída.');
+    } catch (cause: any) {
+      setError(cause?.message || 'Não foi possível excluir a mensagem.');
+    } finally {
+      setDeletingId('');
+    }
+  }
+
+  async function clearConversation() {
+    if (!selected || !messages.length || deletingId) return;
+    if (!window.confirm(`Excluir todas as ${messages.length} mensagem(ns) desta conversa?`)) return;
+
+    setDeletingId('conversation');
+    setError('');
+    setNotice('');
+    try {
+      for (const item of messages) await deleteStoredMessage(item.id);
+      setThreads((rows) => rows.filter((thread) => thread.id !== selected.id));
+      setSelectedId('');
+      setDetailOpen(false);
+      setNotice('Conversa excluída do Inbox.');
+    } catch (cause: any) {
+      setError(cause?.message || 'Não foi possível excluir toda a conversa.');
+      await load(true);
+    } finally {
+      setDeletingId('');
+    }
+  }
+
   return (
     <>
       <PageTitle title="Inbox" subtitle="Atenda WhatsApp e e-mail em uma única central de conversas." />
@@ -261,6 +312,7 @@ export default function InboxPage() {
                   <span>{contactLine(selected, channel)}</span>
                 </div>
                 <span className={styles.channelPill}><Icon name={channel === 'WHATSAPP' ? 'whatsapp' : 'mail'} size={14} />{channel === 'WHATSAPP' ? 'WhatsApp' : 'E-mail'}</span>
+                {messages.length > 0 && <button className={`${styles.deleteButton} icon-btn`} type="button" onClick={() => void clearConversation()} disabled={Boolean(deletingId)} aria-label="Excluir conversa" title="Excluir todas as mensagens desta conversa"><Icon name="x" size={15} /></button>}
                 <button className="icon-btn" type="button" onClick={() => void load()} disabled={refreshing} aria-label="Atualizar conversa"><Icon name="refresh" size={16} /></button>
               </header>
 
@@ -275,7 +327,7 @@ export default function InboxPage() {
                     <div key={item.id} className={`${styles.messageLine} ${outgoing ? styles.messageLineOut : ''}`}>
                       <div className={`${styles.bubble} ${outgoing ? styles.out : ''}`}>
                         <div>{item.text || item.subject || '[conteúdo sem texto]'}</div>
-                        <div className={styles.meta}>{messageDate(item.createdAt)} · {outgoing ? 'Enviado' : 'Recebido'}</div>
+                        <div className={styles.meta}><span>{messageDate(item.createdAt)} · {outgoing ? 'Enviado' : 'Recebido'}</span><button className={styles.messageDelete} type="button" disabled={Boolean(deletingId)} onClick={() => void deleteMessage(item)} aria-label={`Excluir mensagem ${outgoing ? 'enviada' : 'recebida'}`} title="Excluir mensagem"><Icon name="x" size={11} /></button></div>
                       </div>
                     </div>
                   );

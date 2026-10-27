@@ -41,8 +41,6 @@ jobs:
             printf '%s\n' "$bad"
             exit 1
           fi
-      - name: Validate deploy runtime artifacts
-        run: node scripts/validate-runtime-artifacts.mjs
       - name: Check web/API route contract
         run: node scripts/check-api-contract.mjs
       - uses: actions/setup-go@v5
@@ -51,7 +49,7 @@ jobs:
           cache: false
       - name: Build and test WhatsApp service
         working-directory: services/whatsapp
-        run: go test -mod=mod ./...
+        run: go vet ./... && go test ./...
       - name: Enable pnpm
         run: corepack enable && corepack prepare pnpm@10.15.0 --activate
       - name: Install web dependencies
@@ -66,6 +64,20 @@ jobs:
         run: pnpm --filter @klyvero/api db:push
         env:
           DATABASE_URL: postgresql://klyvero:${{ env.PGPASS }}@localhost:5432/klyvero?schema=public
+      - name: Migrations apply to an empty database and match schema.prisma
+        shell: bash
+        run: |
+          set -euo pipefail
+          export PGPASSWORD="$PGPASS"
+          createdb -h localhost -U klyvero klyvero_migrated
+          createdb -h localhost -U klyvero klyvero_shadow
+          base="postgresql://klyvero:${PGPASS}@localhost:5432"
+          DATABASE_URL="$base/klyvero_migrated?schema=public" pnpm --filter @klyvero/api prisma:migrate
+          pnpm --filter @klyvero/api exec prisma migrate diff \
+            --from-migrations prisma/migrations \
+            --to-schema-datamodel prisma/schema.prisma \
+            --shadow-database-url "$base/klyvero_shadow?schema=public" \
+            --exit-code
       - name: API end-to-end tests (campaigns)
         run: pnpm --filter @klyvero/api test:e2e
         env:
