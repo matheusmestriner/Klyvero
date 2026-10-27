@@ -3,6 +3,7 @@
 import { FormEvent, useEffect, useState } from 'react';
 import { api } from '../../../lib/api';
 import { PageTitle } from '../../../components/resource-page';
+import { SignupInvites } from './signup-invites';
 
 const FEATURES = [
   'dashboard',
@@ -204,6 +205,8 @@ export default function TenantsPage() {
           )}
         </div>
       </div>
+
+      <SignupInvites />
 
       {selected && (
         <div className="grid-2 spaced">

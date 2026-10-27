@@ -169,10 +169,13 @@ model Tenant {
   status TenantStatus @default(ACTIVE)
   name String
   slug String @unique
+  /// CPF or CNPJ, digits only. Set by the owner sign-up; one registration per document.
+  legalDocument String? @unique
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   parent Tenant? @relation("TenantHierarchy", fields:[parentTenantId], references:[id])
   children Tenant[] @relation("TenantHierarchy")
+  signupInvites SignupInvite[] @relation("InviteIssuer")
   users User[]
   branding TenantBranding?
   domains TenantDomain[]
@@ -305,6 +308,25 @@ model TenantBranding {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   tenant Tenant @relation(fields:[tenantId],references:[id],onDelete:Cascade)
+}
+
+/// Single-use link that lets one company owner register a reseller (white label) workspace under `tenantId`.
+model SignupInvite {
+  id String @id @default(uuid()) @db.Uuid
+  tenantId String @db.Uuid
+  createdByUserId String? @db.Uuid
+  /// Who the invite is for (shown to the invitee and in the admin list).
+  label String
+  /// When set, the sign-up must use exactly this e-mail.
+  email String?
+  tokenHash String @unique
+  expiresAt DateTime
+  usedAt DateTime?
+  usedByTenantId String? @db.Uuid
+  revokedAt DateTime?
+  createdAt DateTime @default(now())
+  tenant Tenant @relation("InviteIssuer", fields:[tenantId],references:[id],onDelete:Cascade)
+  @@index([tenantId,createdAt])
 }
 
 model TenantDomain {

@@ -28,7 +28,8 @@ export class PreAuthRateLimitGuard implements CanActivate {
       path.includes('/auth/bootstrap') ||
       path.includes('/auth/forgot-password') ||
       path.includes('/auth/reset-password') ||
-      path.includes('/auth/owner-recovery')
+      path.includes('/auth/owner-recovery') ||
+      path.includes('/signup')
     ) return 'auth';
     if (
       path.includes('/email/track/') ||

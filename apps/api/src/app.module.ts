@@ -21,6 +21,7 @@ import { UsageModule } from './modules/usage/usage.module';
 import { HealthModule } from './modules/health/health.module';
 import { AuthModule } from './modules/auth/auth.module';
 import { TenantsModule } from './modules/tenants/tenants.module';
+import { SignupModule } from './modules/signup/signup.module';
 import { BrandingModule } from './modules/branding/branding.module';
 import { CrudModule } from './modules/crud/crud.module';
 import { CrmModule } from './modules/crm/crm.module';
@@ -43,7 +44,7 @@ import { InboxModule } from './modules/inbox/inbox.module';
     ConfigModule.forRoot({ isGlobal: true, validate: validateEnv }),
     JwtModule.register({ global: true }),
     PrismaModule, CryptoModule, RedisModule, QueueModule, SecurityModule, MailModule, TenantAccessModule, UsageModule,
-    HealthModule, AuthModule, TenantsModule, BrandingModule, CrudModule, CrmModule,
+    HealthModule, AuthModule, TenantsModule, SignupModule, BrandingModule, CrudModule, CrmModule,
     WhatsappModule, AnalyticsModule, AiModule, ProspectingModule, EmailModule,
     CampaignsModule, WebhooksModule, CalendarIntegrationModule, BillingModule,
     ApiKeysModule, NotificationsModule, PushModule, InboxModule,
