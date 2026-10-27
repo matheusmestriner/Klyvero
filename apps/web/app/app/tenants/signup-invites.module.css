@@ -14,7 +14,12 @@
   flex: 1;
   min-width: 0;
 }
-@media (max-width: 760px) {
+@media (max-width: 1000px) {
+  .form {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+@media (max-width: 560px) {
   .form {
     grid-template-columns: 1fr;
   }

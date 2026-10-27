@@ -2,12 +2,15 @@
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 0 14px;
+  /* Side-by-side fields must not stretch to the height of a neighbour that has a hint under it. */
+  align-items: start;
 }
 .span {
   grid-column: 1 / -1;
 }
-.card {
-  max-width: 560px;
+/* The shared .login-card is 440px wide; the two-column form needs a little more room. */
+.card:global(.login-card) {
+  width: min(560px, 100%);
 }
 .hint {
   display: block;

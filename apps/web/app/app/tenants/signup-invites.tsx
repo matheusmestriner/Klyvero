@@ -106,7 +106,7 @@ export function SignupInvites() {
       </p>
 
       <form className={styles.form} onSubmit={create}>
-        <input name="label" aria-label="Para quem é o convite" placeholder="Para quem é (ex.: Acme Marketing)" required minLength={2} maxLength={120} disabled={busy} />
+        <input name="label" aria-label="Para quem é o convite" placeholder="Para quem é (ex.: Acme)" required minLength={2} maxLength={120} disabled={busy} />
         <input name="email" type="email" aria-label="E-mail do dono (opcional)" placeholder="E-mail do dono (opcional)" disabled={busy} />
         <select name="validityDays" defaultValue="7" disabled={busy} aria-label="Validade do link">
           <option value="3">Vale 3 dias</option>
@@ -130,38 +130,40 @@ export function SignupInvites() {
         </div>
       )}
 
-      <table className="table spaced">
-        <thead>
-          <tr>
-            <th>Convite</th>
-            <th>Situação</th>
-            <th>Validade</th>
-            <th />
-          </tr>
-        </thead>
-        <tbody>
-          {invites.map((invite) => (
-            <tr key={invite.id}>
-              <td>
-                {invite.label}
-                <div className="muted">{invite.tenant ? `Workspace ${invite.tenant.slug}` : invite.email ?? 'Qualquer e-mail'}</div>
-              </td>
-              <td>{STATUS_LABEL[invite.status]}</td>
-              <td>{invite.status === 'USED' && invite.usedAt ? `Usado em ${date(invite.usedAt)}` : `Até ${date(invite.expiresAt)}`}</td>
-              <td>
-                {invite.status === 'PENDING' && (
-                  <button className="btn ghost" onClick={() => revoke(invite)}>Revogar</button>
-                )}
-              </td>
-            </tr>
-          ))}
-          {!invites.length && (
+      <div className="table-card spaced">
+        <table className="table">
+          <thead>
             <tr>
-              <td colSpan={4} className="muted">Nenhum convite gerado ainda.</td>
+              <th>Convite</th>
+              <th>Situação</th>
+              <th>Validade</th>
+              <th />
             </tr>
-          )}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {invites.map((invite) => (
+              <tr key={invite.id}>
+                <td>
+                  {invite.label}
+                  <div className="muted">{invite.tenant ? `Workspace ${invite.tenant.slug}` : invite.email ?? 'Qualquer e-mail'}</div>
+                </td>
+                <td>{STATUS_LABEL[invite.status]}</td>
+                <td>{invite.status === 'USED' && invite.usedAt ? `Usado em ${date(invite.usedAt)}` : `Até ${date(invite.expiresAt)}`}</td>
+                <td>
+                  {invite.status === 'PENDING' && (
+                    <button className="btn ghost" onClick={() => revoke(invite)}>Revogar</button>
+                  )}
+                </td>
+              </tr>
+            ))}
+            {!invites.length && (
+              <tr>
+                <td colSpan={4} className="muted">Nenhum convite gerado ainda.</td>
+              </tr>
+            )}
+          </tbody>
+        </table>
+      </div>
     </section>
   );
 }
