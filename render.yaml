@@ -55,8 +55,14 @@ services:
         value: klyvero-api
       - key: JWT_AUDIENCE
         value: klyvero-web
+      # Campanhas rodam por um agendador que lê o banco (sem Redis). RUN_QUEUE_WORKERS só afeta webhooks.
       - key: RUN_QUEUE_WORKERS
         value: 'false'
+      - key: RUN_SEQUENCE_SCHEDULER
+        value: 'true'
+      # Token que o provedor de e-mail de entrada usa em POST /api/v1/email/inbound (parar cadência ao receber resposta).
+      - key: EMAIL_INBOUND_TOKEN
+        generateValue: true
       - key: SWAGGER_ENABLED
         value: 'false'
       - key: TRUST_PROXY_HOPS

@@ -5,6 +5,7 @@ import { PrismaService } from '../../infra/prisma/prisma.service';
 import { WhatsappConnectDto } from './dto/connect.dto';
 import { SendWhatsappMessageDto } from './dto/send-message.dto';
 import { WhatsappInternalEventDto } from './dto/internal-event.dto';
+import { digitsOf, phoneKey } from '../../common/phone';
 
 @Injectable()
 export class WhatsappService {
@@ -74,6 +75,22 @@ export class WhatsappService {
     return out;
   }
 
+  /**
+   * Leads are stored however the user typed the number ("+55 (11) 99999-0000"), while WhatsApp
+   * reports digits only, sometimes without the Brazilian ninth digit. Compare canonical keys.
+   */
+  private async leadsByPhone(tenantId: string, phone: string) {
+    const key = phoneKey(phone);
+    if (key.length < 8) return [];
+    const tail = key.slice(-8);
+    const candidates = await this.prisma.$queryRaw<{ id: string; phone: string }[]>`
+      SELECT id, phone FROM "Lead"
+       WHERE "tenantId" = ${tenantId}::uuid
+         AND phone IS NOT NULL
+         AND regexp_replace(phone, '[^0-9]', '', 'g') LIKE ${'%' + tail.replace(/\D/g, '')}`;
+    return candidates.filter((candidate) => phoneKey(digitsOf(candidate.phone)) === key);
+  }
+
   async handleEvent(event: WhatsappInternalEventDto) {
     const { tenantId, sessionId } = event;
     const connection = await this.prisma.whatsappConnection.findFirst({ where: { tenantId, sessionId } });
@@ -107,10 +124,11 @@ export class WhatsappService {
       throw error;
     }
     await this.prisma.messageThread.update({ where: { id: thread.id }, data: { lastMessageAt: receivedAt } });
-    const leads = await this.prisma.lead.findMany({ where: { tenantId, phone } });
+    const leads = await this.leadsByPhone(tenantId, phone);
     if (leads.length) {
-      await this.prisma.lead.updateMany({ where: { tenantId, phone }, data: { status: 'REPLIED' } });
-      await this.prisma.sequenceEnrollment.updateMany({ where: { tenantId, leadId: { in: leads.map((lead) => lead.id) }, status: 'ACTIVE' }, data: { status: 'REPLIED', repliedAt: receivedAt, nextRunAt: null } });
+      const leadIds = leads.map((lead) => lead.id);
+      await this.prisma.lead.updateMany({ where: { tenantId, id: { in: leadIds } }, data: { status: 'REPLIED' } });
+      await this.prisma.sequenceEnrollment.updateMany({ where: { tenantId, leadId: { in: leadIds }, status: { in: ['ACTIVE', 'PAUSED'] } }, data: { status: 'REPLIED', repliedAt: receivedAt, nextRunAt: null } });
       await Promise.all(leads.map((lead) => this.prisma.leadActivity.create({ data: { tenantId, leadId: lead.id, type: 'whatsapp.received', title: 'Resposta recebida no WhatsApp', metadata: { messageId: message.id } } }).catch(() => undefined)));
     }
     return { ok: true, messageId: message.id };

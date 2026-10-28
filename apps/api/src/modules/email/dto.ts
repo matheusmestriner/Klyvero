@@ -32,6 +32,8 @@ export class SendEmailDto {
   @IsOptional() @IsString() @MaxLength(50_000) text?: string;
   @IsOptional() @IsString() @MaxLength(80_000) html?: string;
   @IsOptional() @IsUUID() leadId?: string;
+  /** Appends a visible unsubscribe link to the text body (campaign / outreach mail). */
+  @IsOptional() @IsBoolean() includeUnsubscribeFooter?: boolean;
 }
 
 export class SuppressDto {
