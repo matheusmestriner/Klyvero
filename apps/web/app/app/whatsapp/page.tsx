@@ -276,8 +276,6 @@ export default function WhatsAppPage() {
           lastName,
           email: email || undefined,
           phone,
-          source: 'WHATSAPP',
-          status: 'ACTIVE',
         }),
       }) as Contact;
       setContacts((rows) => [...rows, created]);

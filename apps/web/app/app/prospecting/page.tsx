@@ -228,22 +228,7 @@ export default function ProspectingPage() {
     }
 
     try {
-      await api('/leads', {
-        method: 'POST',
-        body: JSON.stringify({
-          name: company.name,
-          companyName: company.name,
-          company: company.name,
-          email: company.email || undefined,
-          phone: company.phone || undefined,
-          website: company.website || undefined,
-          source: 'PROSPECTING',
-          status: 'NEW',
-          city: company.city || meta?.city || city,
-          state: company.state || meta?.state || state,
-          notes: buildLeadNote(company),
-        }),
-      });
+      await api('/leads', { method: 'POST', body: JSON.stringify(toLeadPayload(company)) });
       setSaved((current) => new Set(current).add(company.id));
       setSelected((current) => {
         const next = new Set(current);
@@ -592,6 +577,36 @@ function calculateClientScore(item: any) {
   if (item?.website || item?.site || item?.url) score += 15;
   if (item?.address || item?.formattedAddress || item?.formatted_address) score += 5;
   return score;
+}
+
+// The API validates leads strictly (unknown properties are rejected), so only
+// LeadDto fields are sent. City/state travel inside the note. Values the API
+// would reject (malformed e-mail or URL) are dropped instead of failing the save.
+function toLeadPayload(company: ProspectCompany) {
+  const email = (company.email || '').trim().toLowerCase();
+  const website = normalizeWebsite(company.website);
+  return {
+    companyName: company.name.trim().slice(0, 200),
+    email: /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) && email.length <= 254 ? email : undefined,
+    phone: company.phone ? company.phone.trim().slice(0, 40) : undefined,
+    website,
+    source: 'PROSPECTING',
+    status: 'NEW',
+    score: Math.round(Math.min(100, Math.max(0, Number(company.score) || 0))),
+    notes: buildLeadNote(company).slice(0, 10000),
+  };
+}
+
+function normalizeWebsite(value?: string) {
+  const raw = (value || '').trim();
+  if (!raw) return undefined;
+  try {
+    const url = new URL(/^https?:\/\//i.test(raw) ? raw : `https://${raw}`);
+    if (!['http:', 'https:'].includes(url.protocol) || !url.hostname.includes('.')) return undefined;
+    return url.toString().slice(0, 2048);
+  } catch {
+    return undefined;
+  }
 }
 
 function buildLeadNote(company: ProspectCompany) {

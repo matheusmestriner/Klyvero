@@ -58,8 +58,8 @@ const EMPTY_SNAPSHOT: BillingSnapshot = {
   features: [],
 };
 
-const BILLING_READ_ENDPOINTS = ['/billing', '/billing/subscription'];
-const BILLING_PORTAL_ENDPOINTS = ['/billing/portal', '/billing/customer-portal'];
+const BILLING_READ_ENDPOINTS = ['/billing/me'];
+const BILLING_PORTAL_ENDPOINTS = ['/billing/portal'];
 
 export default function BillingPage() {
   const { user } = useAuth();
@@ -81,7 +81,14 @@ export default function BillingPage() {
     for (const path of BILLING_READ_ENDPOINTS) {
       try {
         const payload = await api(path);
-        setSnapshot(normalizeBilling(payload));
+        const normalized = normalizeBilling(payload);
+        if (normalized.configured) {
+          setSnapshot(normalized);
+        } else {
+          // Reachable API but no subscription yet: keep the consumption, don't invent a plan.
+          setSnapshot({ ...EMPTY_SNAPSHOT, usage: normalized.usage });
+          setNotice('Este workspace ainda não tem um plano ativo. A cobrança aparecerá aqui quando uma assinatura for criada.');
+        }
         setLoading(false);
         return;
       } catch (caught) {
@@ -336,17 +343,20 @@ function UsageRow({ item }: { item: UsageItem }) {
 
 function normalizeBilling(payload: any): BillingSnapshot {
   const root = payload && typeof payload === 'object' ? payload : {};
+  // GET /billing/me answers { subscription: {…, plan} | null, usage: [{ key, period, value }] }.
   const subscription = root.subscription && typeof root.subscription === 'object' ? root.subscription : root;
   const rawPlan = subscription.plan && typeof subscription.plan === 'object' ? subscription.plan : root.plan && typeof root.plan === 'object' ? root.plan : {};
   const planName = String(rawPlan.name || rawPlan.label || subscription.planName || root.planName || (typeof root.plan === 'string' ? root.plan : '') || 'Plano atual');
   const status = String(subscription.status || root.status || 'ACTIVE').toUpperCase();
-  const amount = firstNumber(rawPlan.amount, rawPlan.price, subscription.amount, root.amount, centsToMoney(rawPlan.amountCents), centsToMoney(subscription.amountCents), centsToMoney(root.amountCents));
+  const amount = firstNumber(rawPlan.amount, rawPlan.price, numberOrUndefined(rawPlan.monthlyPrice), subscription.amount, root.amount, centsToMoney(rawPlan.amountCents), centsToMoney(subscription.amountCents), centsToMoney(root.amountCents));
   const currency = String(rawPlan.currency || subscription.currency || root.currency || 'BRL').toUpperCase();
-  const interval = String(rawPlan.interval || subscription.interval || root.interval || '') || undefined;
-  const renewsAt = subscription.currentPeriodEnd || subscription.renewsAt || root.renewsAt || root.currentPeriodEnd || null;
+  const interval = String(rawPlan.interval || subscription.interval || root.interval || (rawPlan.monthlyPrice != null ? 'month' : '')) || undefined;
+  const renewsAt = subscription.currentPeriodEnd || subscription.currentPeriodEndsAt || subscription.renewsAt || root.renewsAt || root.currentPeriodEnd || null;
   const cancelsAtPeriodEnd = Boolean(subscription.cancelAtPeriodEnd ?? root.cancelAtPeriodEnd ?? false);
   const paymentMethodSource = root.paymentMethod || subscription.paymentMethod || null;
-  const usageSource = root.usage && typeof root.usage === 'object' ? root.usage : root.limits && typeof root.limits === 'object' ? root.limits : {};
+  const usageSource = Array.isArray(root.usage)
+    ? usageFromCounters(root.usage, rawPlan.limits)
+    : root.usage && typeof root.usage === 'object' ? root.usage : root.limits && typeof root.limits === 'object' ? root.limits : {};
   const invoices = Array.isArray(root.invoices) ? root.invoices : Array.isArray(root.history) ? root.history : [];
   const featuresSource = Array.isArray(root.features) ? root.features : Array.isArray(rawPlan.features) ? rawPlan.features : [];
 
@@ -381,12 +391,31 @@ function normalizeBilling(payload: any): BillingSnapshot {
   };
 }
 
+// Collapses the API's monthly counters ({ key, period, value }) into { key: { used, limit } },
+// using the most recent period of each key and the plan limits when the plan defines them.
+function usageFromCounters(counters: any[], limits: any): Record<string, { used: number; limit: number | null }> {
+  const latest = new Map<string, { period: string; value: number }>();
+  for (const row of counters) {
+    const key = String(row?.key || '');
+    const period = String(row?.period || '');
+    if (!key) continue;
+    const current = latest.get(key);
+    if (!current || period > current.period) latest.set(key, { period, value: Number(row?.value) || 0 });
+  }
+  const result: Record<string, { used: number; limit: number | null }> = {};
+  for (const [key, entry] of latest) {
+    const limit = limits && typeof limits[key] === 'number' ? limits[key] : null;
+    result[key] = { used: entry.value, limit };
+  }
+  return result;
+}
+
 function normalizeUsage(source: Record<string, any>): UsageItem[] {
   const definitions: Array<{ keys: string[]; key: string; label: string; icon: IconName }> = [
     { keys: ['users', 'seats', 'members'], key: 'users', label: 'Usuários', icon: 'users' },
     { keys: ['contacts', 'contactLimit'], key: 'contacts', label: 'Contatos', icon: 'contacts' },
     { keys: ['emails', 'emailSends'], key: 'emails', label: 'Envios de e-mail', icon: 'mail' },
-    { keys: ['aiCredits', 'ai', 'credits'], key: 'ai', label: 'Créditos de IA', icon: 'sparkles' },
+    { keys: ['aiCredits', 'ai', 'credits', 'ai_runs'], key: 'ai', label: 'Créditos de IA', icon: 'sparkles' },
   ];
 
   const items: UsageItem[] = [];

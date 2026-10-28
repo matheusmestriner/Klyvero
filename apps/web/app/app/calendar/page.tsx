@@ -121,7 +121,7 @@ export default function CalendarPage() {
       endsAt: new Date(String(form.get('endsAt') || '')).toISOString(),
       location: String(form.get('location') || '').trim(),
       description: String(form.get('description') || '').trim(),
-      timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone || 'America/Sao_Paulo',
+      timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || 'America/Sao_Paulo',
     };
 
     if (!body.title) {

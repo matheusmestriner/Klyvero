@@ -16,6 +16,7 @@
     "check": "pnpm --filter @klyvero/api lint && pnpm --filter @klyvero/web lint",
     "security:audit": "pnpm audit --audit-level high",
     "runtime:validate": "node scripts/validate-runtime-artifacts.mjs",
+    "contract:check": "node scripts/check-api-contract.mjs",
     "launch:check": "node scripts/launch-readiness.mjs"
   }
 }
