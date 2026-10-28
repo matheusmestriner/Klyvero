@@ -62,8 +62,13 @@ export function applyBranding(resolved: ResolvedBranding | null | undefined) {
   if (brand.fontFamily) root.style.fontFamily = brand.fontFamily;
   else root.style.removeProperty('font-family');
 
+  // The UI tokens (--ui-border, --ui-input, ...) exist only for "light" and "dark". Leaving "system" on the
+  // page makes every input lose its border and background, so resolve it the way the app shell does.
   const mode = brand.themeMode || 'SYSTEM';
-  root.dataset.theme = mode.toLowerCase();
+  root.dataset.theme =
+    mode === 'SYSTEM'
+      ? window.matchMedia?.('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
+      : mode.toLowerCase();
 
   const productName = brand.productName || resolved?.tenant?.name || 'Klyvero';
   document.title = productName;

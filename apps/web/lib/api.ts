@@ -35,6 +35,8 @@ function isPublicAuthPath(path: string) {
     path === '/auth/bootstrap' ||
     path === '/auth/bootstrap/status' ||
     path === '/auth/refresh' ||
+    path === '/signup' ||
+    path === '/signup/invite/check' ||
     path.startsWith('/branding/resolve/domain/')
   );
 }

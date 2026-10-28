@@ -29,11 +29,15 @@ export default function Login() {
   const [brand, setBrand] = useState<ResolvedBranding | null>(null);
   const [bootstrapAvailable, setBootstrapAvailable] = useState(false);
   const [busy, setBusy] = useState(false);
+  // Sent by the sign-up page so the new owner lands on the login with the workspace filled in.
+  const [workspaceHint, setWorkspaceHint] = useState('');
   const router = useRouter();
 
   useEffect(() => {
     const hostname = window.location.hostname;
-    const reason = new URLSearchParams(window.location.search).get('reason');
+    const params = new URLSearchParams(window.location.search);
+    const reason = params.get('reason');
+    setWorkspaceHint((params.get('workspace') ?? '').trim().toLowerCase().slice(0, 80));
     if (reason === 'session-expired') {
       setError('Sua sessão expirou. Entre novamente para continuar.');
     }
@@ -134,7 +138,8 @@ export default function Login() {
             id="tenantSlug"
             name="tenantSlug"
             placeholder="sua-empresa"
-            defaultValue={resolvedTenantSlug}
+            key={resolvedTenantSlug || workspaceHint}
+            defaultValue={resolvedTenantSlug || workspaceHint}
             autoCapitalize="none"
             autoComplete="organization"
             spellCheck={false}

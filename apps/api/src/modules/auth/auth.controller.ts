@@ -12,6 +12,7 @@ import type { Request, Response } from 'express';
 import { Public } from '../../common/public.decorator';
 import { CurrentUser } from '../../common/current-user.decorator';
 import { AuthUser } from '../../common/auth.types';
+import { assertBrowserOrigin } from '../../common/browser-origin';
 import { AuthService } from './auth.service';
 import { BootstrapDto, ForgotPasswordDto, LoginDto, OwnerRecoveryDto, RefreshDto, ResetPasswordDto } from './dto';
 
@@ -52,20 +53,7 @@ export class AuthController {
   }
 
   private assertBrowserOrigin(req: Request) {
-    const origin = req.headers.origin;
-    const fetchSite = req.headers['sec-fetch-site'];
-    const allowed = String(this.config.get('WEB_ORIGIN') ?? 'http://localhost:3000')
-      .split(',')
-      .map((value) => value.trim())
-      .filter(Boolean)
-      .map((value) => new URL(value).origin);
-
-    if (typeof origin === 'string' && !allowed.includes(origin)) {
-      throw new ForbiddenException('Cross-site authentication request blocked');
-    }
-    if (!origin && fetchSite === 'cross-site') {
-      throw new ForbiddenException('Cross-site authentication request blocked');
-    }
+    assertBrowserOrigin(req, this.config);
   }
 
   @Public()

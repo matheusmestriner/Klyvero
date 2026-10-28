@@ -9,7 +9,7 @@ AI sales OS: prospecting, CRM, e-mail and WhatsApp campaigns, inbox, calendar an
 | `apps/mobile` | Expo app (Inbox, Leads, Agenda, push). Own npm lockfile, see its README |
 | `services/whatsapp` | Go bridge to WhatsApp (whatsmeow), called by the API |
 | `packages/contracts` | Shared types |
-| `docs` | [Campaign engine](docs/campaigns.md), [database and migrations](docs/database.md) |
+| `docs` | [Campaign engine](docs/campaigns.md), [database and migrations](docs/database.md), [owner sign-up (white label)](docs/signup.md) |
 
 ## Run locally
 

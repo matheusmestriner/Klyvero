@@ -1,0 +1,26 @@
+.form {
+  display: grid;
+  grid-template-columns: minmax(0, 1.4fr) minmax(0, 1.4fr) 150px auto;
+  gap: 10px;
+  align-items: center;
+}
+.link {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  margin: 8px 0;
+}
+.link input {
+  flex: 1;
+  min-width: 0;
+}
+@media (max-width: 1000px) {
+  .form {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+@media (max-width: 560px) {
+  .form {
+    grid-template-columns: 1fr;
+  }
+}

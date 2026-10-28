@@ -1,0 +1,62 @@
+.grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0 14px;
+  /* Side-by-side fields must not stretch to the height of a neighbour that has a hint under it. */
+  align-items: start;
+}
+.span {
+  grid-column: 1 / -1;
+}
+/* The shared .login-card is 440px wide; the two-column form needs a little more room. */
+.card:global(.login-card) {
+  width: min(560px, 100%);
+}
+.hint {
+  display: block;
+  margin-top: 4px;
+  font-size: 12px;
+  opacity: 0.75;
+}
+.section {
+  grid-column: 1 / -1;
+  margin: 14px 0 2px;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  opacity: 0.8;
+}
+.colorRow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.colorRow input[type='checkbox'] {
+  flex: none;
+  width: 18px;
+  height: 18px;
+  min-height: 0;
+  padding: 0;
+  margin: 0;
+  accent-color: var(--primary, #2563eb);
+}
+.colorRow input[type='color'] {
+  width: 48px;
+  height: 40px;
+  padding: 2px;
+  cursor: pointer;
+}
+.summary {
+  display: grid;
+  gap: 4px;
+  margin: 12px 0;
+  padding: 12px 14px;
+  border-radius: 10px;
+  border: 1px solid var(--border, rgba(127, 127, 127, 0.3));
+}
+@media (max-width: 560px) {
+  .grid {
+    grid-template-columns: 1fr;
+  }
+}

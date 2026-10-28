@@ -11,6 +11,7 @@ import { PrismaService } from '../../infra/prisma/prisma.service';
 import { AuthDefenseService } from '../../infra/security/auth-defense.service';
 import { constantTimeSecretEquals } from '../../common/constant-time';
 import * as argon2 from 'argon2';
+import { DEFAULT_PIPELINE } from '../../common/default-pipeline';
 import { randomBytes, randomUUID, createHash } from 'crypto';
 import { MailerService } from '../../infra/mail/mailer.service';
 import { BootstrapDto, ForgotPasswordDto, LoginDto, OwnerRecoveryDto, ResetPasswordDto } from './dto';
@@ -83,22 +84,7 @@ export class AuthService {
           role: 'OWNER',
         },
       });
-      await tx.pipeline.create({
-        data: {
-          tenantId: tenant.id,
-          name: 'Pipeline principal',
-          isDefault: true,
-          stages: {
-            create: [
-              { name: 'Novo', position: 1, probability: 10 },
-              { name: 'Contato', position: 2, probability: 25 },
-              { name: 'Qualificado', position: 3, probability: 50 },
-              { name: 'Proposta', position: 4, probability: 75 },
-              { name: 'Ganho', position: 5, probability: 100 },
-            ],
-          },
-        },
-      });
+      await tx.pipeline.create({ data: { tenantId: tenant.id, ...DEFAULT_PIPELINE } });
       return {
         tenant: { id: tenant.id, name: tenant.name, slug: tenant.slug },
         user: { id: user.id, email: user.email },
