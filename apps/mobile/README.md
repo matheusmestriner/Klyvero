@@ -36,6 +36,28 @@ After login the app asks for permission and registers its Expo push token with `
 it opens that conversation. Push needs a development or production build with an EAS project id
 (`expo.extra.eas.projectId`); it does not work in Expo Go on Android nor in the browser.
 
+## Gerar o APK (EAS Build)
+
+O perfil `preview` de `eas.json` gera um **APK** instalável direto no celular (o `production` gera `.aab` para a Play Store).
+O build roda nos servidores da Expo, então precisa de uma conta Expo. A primeira vez é interativa, porque o EAS cria o
+projeto, grava o `projectId` no `app.json` e gera a chave de assinatura (keystore) do Android:
+
+```bash
+cd apps/mobile
+npx eas-cli login
+npx eas-cli build --platform android --profile preview   # responda "Y" para criar o projeto e a keystore
+```
+
+No fim o terminal imprime o link do APK (também em https://expo.dev, na página do build). Abra esse link no celular para baixar e
+instalar (é preciso permitir "instalar apps desconhecidos"). Faça commit do `extra.eas.projectId` que o EAS escrever no `app.json`.
+
+Depois da primeira vez, builds seguintes podem ser disparados sem terminal interativo (`--non-interactive`), pelo painel da
+Expo ligado ao repositório do GitHub (Base directory: `apps/mobile`) ou pelo assistente.
+
+> O app só consegue entrar se a **API de produção** já tiver os endpoints do celular (`x-klyvero-client: mobile`, `/devices`,
+> `/inbox/threads`…). Faça o merge e o deploy da API antes de distribuir o APK. Para apontar para outro servidor, defina
+> `EXPO_PUBLIC_API_URL` no perfil de build (campo `env` em `eas.json`) ou altere `extra.apiUrl` no `app.json`.
+
 ## Layout
 
 ```
