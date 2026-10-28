@@ -1,14 +1,12 @@
-// Fails when the web app calls an API route that the bundled NestJS API does not expose.
+// Fails when the web app calls an API route that the NestJS API does not expose.
 //
-// The API source ships as deploy/api-source-v2.b64.* (base64 tar.gz) and part of the web
-// app as deploy/web-routes-v4.part.* (base64 gzip JSON), so neither side is reviewable as
-// plain files. This script decodes both, collects every `@Get/@Post/...` route and every
-// `api('/path')` call (method + path), and reports the calls with no matching route.
+// Collects every `@Get/@Post/...` route from apps/api/src/modules/**/*.controller.ts and every
+// `api('/path')` call (method + path) made by apps/web, by the generated web routes
+// (deploy/web-routes-v4.part.*, base64 gzip JSON) and by the build-time patch scripts,
+// then reports the calls with no matching route.
 //
 // It checks routes only. Payload shapes are enforced at runtime by the API ValidationPipe.
-import { execFileSync } from 'node:child_process';
-import { mkdtempSync, readFileSync, readdirSync, rmSync, statSync, writeFileSync } from 'node:fs';
-import { tmpdir } from 'node:os';
+import { readFileSync, readdirSync, statSync } from 'node:fs';
 import { join, relative } from 'node:path';
 import { gunzipSync } from 'node:zlib';
 
@@ -44,24 +42,16 @@ const normalize = (path) =>
     .replace(/\/{2,}/g, '/')
     .replace(/\/+$/, '') || '/';
 
-// --- 1. routes exposed by the API bundle -------------------------------------------------
-const tmp = mkdtempSync(join(tmpdir(), 'klyvero-contract-'));
+// --- 1. routes exposed by the API --------------------------------------------------------
 const routes = new Set();
-try {
-  const archive = join(tmp, 'api.tgz');
-  writeFileSync(archive, Buffer.from(parts('api-source-v2.b64.'), 'base64'));
-  execFileSync('tar', ['-xzf', archive, '-C', tmp, '--no-same-owner']);
-  for (const file of walk(join(tmp, 'apps', 'api', 'src', 'modules')).filter((f) => f.endsWith('controller.ts'))) {
-    const source = readFileSync(file, 'utf8');
-    const prefix = source.match(/@Controller\(\s*(?:'([^']*)')?\s*\)/)?.[1] ?? '';
-    for (const match of source.matchAll(/@(Get|Post|Put|Patch|Delete)\(\s*(?:'([^']*)')?\s*\)/g)) {
-      routes.add(`${match[1].toUpperCase()} ${normalize(`/${prefix}/${match[2] ?? ''}`)}`);
-    }
+for (const file of walk(join(root, 'apps', 'api', 'src', 'modules')).filter((f) => f.endsWith('controller.ts'))) {
+  const source = readFileSync(file, 'utf8');
+  const prefix = source.match(/@Controller\(\s*(?:'([^']*)')?\s*\)/)?.[1] ?? '';
+  for (const match of source.matchAll(/@(Get|Post|Put|Patch|Delete)\(\s*(?:'([^']*)')?\s*\)/g)) {
+    routes.add(`${match[1].toUpperCase()} ${normalize(`/${prefix}/${match[2] ?? ''}`)}`);
   }
-} finally {
-  rmSync(tmp, { recursive: true, force: true });
 }
-if (routes.size < 50) throw new Error(`Only ${routes.size} API routes found; the bundle layout probably changed.`);
+if (routes.size < 50) throw new Error(`Only ${routes.size} API routes found; the API layout probably changed.`);
 
 // --- 2. calls made by the web app --------------------------------------------------------
 const sources = [];

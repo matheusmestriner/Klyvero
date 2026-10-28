@@ -8,18 +8,11 @@ services:
     branch: main
     autoDeployTrigger: commit
     buildCommand: >-
-      rm -rf .api-runtime &&
-      mkdir .api-runtime &&
-      cat deploy/api-source-v2.b64.* | base64 -d > /tmp/klyvero-api.tgz &&
-      sha256sum -c deploy/api-source-v2.sha256 &&
-      tar -xzf /tmp/klyvero-api.tgz -C .api-runtime &&
-      cd .api-runtime &&
-      pnpm install --no-frozen-lockfile &&
+      pnpm install --no-frozen-lockfile --filter @klyvero/api... &&
       pnpm --filter @klyvero/api prisma:generate &&
       pnpm --filter @klyvero/api db:push &&
       pnpm --filter @klyvero/api build
     startCommand: >-
-      cd .api-runtime &&
       export JWT_ACCESS_SECRET="$(printf '%s' "$JWT_ACCESS_SEED" | sha512sum | cut -d' ' -f1)" &&
       export JWT_REFRESH_SECRET="$(printf '%s' "$JWT_REFRESH_SEED" | sha512sum | cut -d' ' -f1)" &&
       exec pnpm --filter @klyvero/api start

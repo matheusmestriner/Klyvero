@@ -40,6 +40,12 @@ jobs:
         run: corepack enable && corepack prepare pnpm@10.15.0 --activate
       - name: Install web dependencies
         run: pnpm install --no-frozen-lockfile
+      - name: Generate Prisma client
+        run: pnpm --filter @klyvero/api prisma:generate
+      - name: Type-check and build API
+        run: pnpm --filter @klyvero/api build
+      - name: Test API
+        run: pnpm --filter @klyvero/api test
       - name: Type-check web application
         run: pnpm --filter @klyvero/web lint
       - name: Build web application

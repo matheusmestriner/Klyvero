@@ -1,0 +1,933 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum TenantType {
+  PLATFORM
+  RESELLER
+  CUSTOMER
+}
+enum TenantStatus {
+  ACTIVE
+  SUSPENDED
+  ARCHIVED
+}
+enum UserRole {
+  OWNER
+  ADMIN
+  MANAGER
+  SDR
+  MEMBER
+  VIEWER
+}
+enum ThemeMode {
+  SYSTEM
+  LIGHT
+  DARK
+}
+enum DomainStatus {
+  PENDING
+  VERIFIED
+  FAILED
+}
+enum LeadStatus {
+  NEW
+  CONTACTED
+  REPLIED
+  QUALIFIED
+  MEETING
+  WON
+  LOST
+  BLOCKED
+}
+enum DealStatus {
+  OPEN
+  WON
+  LOST
+}
+enum CampaignStatus {
+  DRAFT
+  ACTIVE
+  PAUSED
+  COMPLETED
+  ARCHIVED
+}
+enum CampaignChannel {
+  EMAIL
+  WHATSAPP
+  MULTICHANNEL
+}
+enum MessageChannel {
+  EMAIL
+  WHATSAPP
+}
+enum MessageDirection {
+  INBOUND
+  OUTBOUND
+}
+enum MessageStatus {
+  QUEUED
+  SENT
+  DELIVERED
+  READ
+  FAILED
+  RECEIVED
+}
+enum TaskStatus {
+  OPEN
+  DONE
+  CANCELED
+}
+enum IntegrationType {
+  WHATSAPP
+  SMTP
+  GOOGLE_CALENDAR
+  OPENAI
+  WEBHOOK
+  PROSPECTING
+  STRIPE
+  CUSTOM
+}
+enum IntegrationStatus {
+  DISCONNECTED
+  CONNECTING
+  CONNECTED
+  ERROR
+}
+enum CalendarEventStatus {
+  SCHEDULED
+  COMPLETED
+  CANCELED
+}
+enum ProspectStatus {
+  NEW
+  REVIEWED
+  CONVERTED
+  REJECTED
+  DUPLICATE
+}
+enum ProspectingJobStatus {
+  QUEUED
+  RUNNING
+  COMPLETED
+  FAILED
+  CANCELED
+}
+enum EnrollmentStatus {
+  ACTIVE
+  PAUSED
+  REPLIED
+  COMPLETED
+  STOPPED
+  FAILED
+}
+enum StepRunStatus {
+  QUEUED
+  RUNNING
+  SENT
+  SKIPPED
+  FAILED
+  CANCELED
+}
+enum SuppressionReason {
+  UNSUBSCRIBE
+  BOUNCE
+  COMPLAINT
+  MANUAL
+  INVALID
+}
+enum TrackingEventType {
+  OPEN
+  CLICK
+  REPLY
+  BOUNCE
+  UNSUBSCRIBE
+  DELIVERY
+  FAILURE
+}
+enum WebhookDeliveryStatus {
+  PENDING
+  DELIVERED
+  FAILED
+}
+enum NotificationType {
+  INFO
+  SUCCESS
+  WARNING
+  ERROR
+}
+
+model Tenant {
+  id String @id @default(uuid()) @db.Uuid
+  parentTenantId String? @db.Uuid
+  type TenantType
+  status TenantStatus @default(ACTIVE)
+  name String
+  slug String @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  parent Tenant? @relation("TenantHierarchy", fields:[parentTenantId], references:[id])
+  children Tenant[] @relation("TenantHierarchy")
+  users User[]
+  branding TenantBranding?
+  domains TenantDomain[]
+  features TenantFeature[]
+  leads Lead[]
+  companies Company[]
+  contacts Contact[]
+  pipelines Pipeline[]
+  deals Deal[]
+  tasks Task[]
+  campaigns Campaign[]
+  threads MessageThread[]
+  messages Message[]
+  whatsapp WhatsappConnection[]
+  aiAgents AiAgent[]
+  aiExecutions AiExecution[]
+  integrations Integration[]
+  calendarEvents CalendarEvent[]
+  audits AuditLog[]
+  subscription Subscription?
+  icpProfiles IcpProfile[]
+  prospectJobs ProspectingJob[]
+  prospects Prospect[]
+  mailboxes EmailMailbox[]
+  enrollments SequenceEnrollment[]
+  suppressions SuppressionEntry[]
+  trackingEvents TrackingEvent[]
+  webhooks WebhookEndpoint[]
+  apiKeys ApiKey[]
+  usage UsageCounter[]
+  notifications Notification[]
+  secrets Secret[]
+  activities LeadActivity[]
+  @@index([parentTenantId])
+  @@index([type,status])
+}
+
+model User {
+  id String @id @default(uuid()) @db.Uuid
+  tenantId String @db.Uuid
+  email String
+  passwordHash String
+  name String
+  role UserRole @default(MEMBER)
+  active Boolean @default(true)
+  lastLoginAt DateTime?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  tenant Tenant @relation(fields:[tenantId],references:[id],onDelete:Cascade)
+  refreshSessions RefreshSession[]
+  passwordResets PasswordResetToken[]
+  assignedDeals Deal[] @relation("DealOwner")
+  assignedTasks Task[] @relation("TaskAssignee")
+  notifications Notification[]
+  @@unique([tenantId,email])
+  @@index([tenantId,role])
+}
+
+model RefreshSession {
+  id String @id @default(uuid()) @db.Uuid
+  userId String @db.Uuid
+  familyId String @default(uuid()) @db.Uuid
+  tokenHash String @unique
+  parentTokenHash String?
+  replacedByTokenHash String?
+  expiresAt DateTime
+  revokedAt DateTime?
+  revocationReason String?
+  userAgent String?
+  ip String?
+  createdAt DateTime @default(now())
+  user User @relation(fields:[userId],references:[id],onDelete:Cascade)
+  @@index([userId,expiresAt])
+  @@index([familyId,revokedAt])
+}
+
+model PasswordResetToken {
+  id String @id @default(uuid()) @db.Uuid
+  userId String @db.Uuid
+  tokenHash String @unique
+  expiresAt DateTime
+  usedAt DateTime?
+  ip String?
+  createdAt DateTime @default(now())
+  user User @relation(fields:[userId],references:[id],onDelete:Cascade)
+  @@index([userId,createdAt])
+}
+
+model TenantBranding {
+  id String @id @default(uuid()) @db.Uuid
+  tenantId String @unique @db.Uuid
+  inheritFromParent Boolean @default(true)
+  productName String?
+  companyName String?
+  logoUrl String?
+  compactLogoUrl String?
+  faviconUrl String?
+  primaryColor String?
+  secondaryColor String?
+  accentColor String?
+  backgroundColor String?
+  fontFamily String?
+  themeMode ThemeMode @default(SYSTEM)
+  loginBackgroundUrl String?
+  loginTitle String?
+  loginSubtitle String?
+  supportUrl String?
+  supportEmail String?
+  privacyUrl String?
+  termsUrl String?
+  senderName String?
+  customCss String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  tenant Tenant @relation(fields:[tenantId],references:[id],onDelete:Cascade)
+}
+
+model TenantDomain {
+  id String @id @default(uuid()) @db.Uuid
+  tenantId String @db.Uuid
+  hostname String @unique
+  status DomainStatus @default(PENDING)
+  verificationToken String @unique
+  verifiedAt DateTime?
+  isPrimary Boolean @default(false)
+  createdAt DateTime @default(now())
+  tenant Tenant @relation(fields:[tenantId],references:[id],onDelete:Cascade)
+  @@index([tenantId])
+}
+
+model TenantFeature {
+  id String @id @default(uuid()) @db.Uuid
+  tenantId String @db.Uuid
+  key String
+  enabled Boolean @default(true)
+  config Json?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  tenant Tenant @relation(fields:[tenantId],references:[id],onDelete:Cascade)
+  @@unique([tenantId,key])
+}
+
+model Company {
+  id String @id @default(uuid()) @db.Uuid
+  tenantId String @db.Uuid
+  name String
+  domain String?
+  website String?
+  industry String?
+  size String?
+  city String?
+  state String?
+  country String?
+  notes String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  tenant Tenant @relation(fields:[tenantId],references:[id],onDelete:Cascade)
+  leads Lead[]
+  contacts Contact[]
+  deals Deal[]
+  prospects Prospect[]
+  @@index([tenantId,name])
+  @@index([tenantId,domain])
+}
+
+model Contact {
+  id String @id @default(uuid()) @db.Uuid
+  tenantId String @db.Uuid
+  companyId String? @db.Uuid
+  firstName String?
+  lastName String?
+  email String?
+  phone String?
+  jobTitle String?
+  linkedinUrl String?
+  notes String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  tenant Tenant @relation(fields:[tenantId],references:[id],onDelete:Cascade)
+  company Company? @relation(fields:[companyId],references:[id],onDelete:SetNull)
+  leads Lead[]
+  deals Deal[]
+  threads MessageThread[]
+  @@index([tenantId,email])
+  @@index([tenantId,phone])
+}
+
+model Lead {
+  id String @id @default(uuid()) @db.Uuid
+  tenantId String @db.Uuid
+  companyId String? @db.Uuid
+  contactId String? @db.Uuid
+  firstName String?
+  lastName String?
+  companyName String?
+  jobTitle String?
+  email String?
+  phone String?
+  linkedinUrl String?
+  website String?
+  status LeadStatus @default(NEW)
+  source String?
+  score Int?
+  notes String?
+  metadata Json?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  tenant Tenant @relation(fields:[tenantId],references:[id],onDelete:Cascade)
+  company Company? @relation(fields:[companyId],references:[id],onDelete:SetNull)
+  contact Contact? @relation(fields:[contactId],references:[id],onDelete:SetNull)
+  enrollments SequenceEnrollment[]
+  activities LeadActivity[]
+  convertedProspects Prospect[] @relation("ConvertedLead")
+  @@index([tenantId,status])
+  @@index([tenantId,email])
+  @@index([tenantId,phone])
+}
+
+model LeadActivity {
+  id String @id @default(uuid()) @db.Uuid
+  tenantId String @db.Uuid
+  leadId String @db.Uuid
+  actorUserId String? @db.Uuid
+  type String
+  title String
+  body String?
+  metadata Json?
+  createdAt DateTime @default(now())
+  tenant Tenant @relation(fields:[tenantId],references:[id],onDelete:Cascade)
+  lead Lead @relation(fields:[leadId],references:[id],onDelete:Cascade)
+  @@index([tenantId,leadId,createdAt])
+}
+
+model Pipeline {
+  id String @id @default(uuid()) @db.Uuid
+  tenantId String @db.Uuid
+  name String
+  isDefault Boolean @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  tenant Tenant @relation(fields:[tenantId],references:[id],onDelete:Cascade)
+  stages PipelineStage[]
+  deals Deal[]
+  @@index([tenantId])
+}
+
+model PipelineStage {
+  id String @id @default(uuid()) @db.Uuid
+  pipelineId String @db.Uuid
+  name String
+  position Int
+  probability Int @default(0)
+  color String?
+  pipeline Pipeline @relation(fields:[pipelineId],references:[id],onDelete:Cascade)
+  deals Deal[]
+  @@unique([pipelineId,position])
+}
+
+model Deal {
+  id String @id @default(uuid()) @db.Uuid
+  tenantId String @db.Uuid
+  pipelineId String @db.Uuid
+  stageId String @db.Uuid
+  companyId String? @db.Uuid
+  contactId String? @db.Uuid
+  ownerId String? @db.Uuid
+  title String
+  value Decimal @default(0) @db.Decimal(14,2)
+  status DealStatus @default(OPEN)
+  expectedCloseAt DateTime?
+  closedAt DateTime?
+  notes String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  tenant Tenant @relation(fields:[tenantId],references:[id],onDelete:Cascade)
+  pipeline Pipeline @relation(fields:[pipelineId],references:[id],onDelete:Cascade)
+  stage PipelineStage @relation(fields:[stageId],references:[id])
+  company Company? @relation(fields:[companyId],references:[id],onDelete:SetNull)
+  contact Contact? @relation(fields:[contactId],references:[id],onDelete:SetNull)
+  owner User? @relation("DealOwner",fields:[ownerId],references:[id],onDelete:SetNull)
+  tasks Task[]
+  @@index([tenantId,status])
+  @@index([pipelineId,stageId])
+}
+
+model Task {
+  id String @id @default(uuid()) @db.Uuid
+  tenantId String @db.Uuid
+  dealId String? @db.Uuid
+  assigneeId String? @db.Uuid
+  title String
+  description String?
+  dueAt DateTime?
+  status TaskStatus @default(OPEN)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  tenant Tenant @relation(fields:[tenantId],references:[id],onDelete:Cascade)
+  deal Deal? @relation(fields:[dealId],references:[id],onDelete:Cascade)
+  assignee User? @relation("TaskAssignee",fields:[assigneeId],references:[id],onDelete:SetNull)
+  @@index([tenantId,status,dueAt])
+}
+
+model Campaign {
+  id String @id @default(uuid()) @db.Uuid
+  tenantId String @db.Uuid
+  emailMailboxId String? @db.Uuid
+  name String
+  status CampaignStatus @default(DRAFT)
+  channel CampaignChannel
+  description String?
+  settings Json?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  tenant Tenant @relation(fields:[tenantId],references:[id],onDelete:Cascade)
+  emailMailbox EmailMailbox? @relation(fields:[emailMailboxId],references:[id],onDelete:SetNull)
+  steps SequenceStep[]
+  enrollments SequenceEnrollment[]
+  @@index([tenantId,status])
+}
+
+model SequenceStep {
+  id String @id @default(uuid()) @db.Uuid
+  campaignId String @db.Uuid
+  position Int
+  delayMinutes Int @default(0)
+  channel MessageChannel
+  subject String?
+  body String
+  active Boolean @default(true)
+  campaign Campaign @relation(fields:[campaignId],references:[id],onDelete:Cascade)
+  runs SequenceStepRun[]
+  @@unique([campaignId,position])
+}
+
+model SequenceEnrollment {
+  id String @id @default(uuid()) @db.Uuid
+  tenantId String @db.Uuid
+  campaignId String @db.Uuid
+  leadId String @db.Uuid
+  status EnrollmentStatus @default(ACTIVE)
+  currentPosition Int @default(0)
+  nextRunAt DateTime?
+  repliedAt DateTime?
+  completedAt DateTime?
+  lastError String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  tenant Tenant @relation(fields:[tenantId],references:[id],onDelete:Cascade)
+  campaign Campaign @relation(fields:[campaignId],references:[id],onDelete:Cascade)
+  lead Lead @relation(fields:[leadId],references:[id],onDelete:Cascade)
+  runs SequenceStepRun[]
+  @@unique([campaignId,leadId])
+  @@index([tenantId,status,nextRunAt])
+}
+
+model SequenceStepRun {
+  id String @id @default(uuid()) @db.Uuid
+  enrollmentId String @db.Uuid
+  stepId String @db.Uuid
+  status StepRunStatus @default(QUEUED)
+  scheduledAt DateTime
+  startedAt DateTime?
+  finishedAt DateTime?
+  messageId String? @db.Uuid
+  error String?
+  attempts Int @default(0)
+  enrollment SequenceEnrollment @relation(fields:[enrollmentId],references:[id],onDelete:Cascade)
+  step SequenceStep @relation(fields:[stepId],references:[id],onDelete:Cascade)
+  @@unique([enrollmentId,stepId])
+  @@index([status,scheduledAt])
+}
+
+model MessageThread {
+  id String @id @default(uuid()) @db.Uuid
+  tenantId String @db.Uuid
+  contactId String? @db.Uuid
+  channel MessageChannel
+  externalKey String?
+  subject String?
+  lastMessageAt DateTime?
+  assignedUserId String? @db.Uuid
+  closed Boolean @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  tenant Tenant @relation(fields:[tenantId],references:[id],onDelete:Cascade)
+  contact Contact? @relation(fields:[contactId],references:[id],onDelete:SetNull)
+  messages Message[]
+  @@index([tenantId,channel,lastMessageAt])
+}
+
+model Message {
+  id String @id @default(uuid()) @db.Uuid
+  tenantId String @db.Uuid
+  threadId String @db.Uuid
+  channel MessageChannel
+  direction MessageDirection
+  status MessageStatus @default(QUEUED)
+  externalId String?
+  fromAddress String?
+  toAddress String?
+  subject String?
+  text String?
+  html String?
+  mediaUrl String?
+  metadata Json?
+  sentAt DateTime?
+  receivedAt DateTime?
+  createdAt DateTime @default(now())
+  tenant Tenant @relation(fields:[tenantId],references:[id],onDelete:Cascade)
+  thread MessageThread @relation(fields:[threadId],references:[id],onDelete:Cascade)
+  @@index([tenantId,threadId,createdAt])
+  @@index([tenantId,externalId])
+  @@unique([tenantId,channel,direction,externalId])
+}
+
+model WhatsappConnection {
+  id String @id @default(uuid()) @db.Uuid
+  tenantId String @db.Uuid
+  sessionId String
+  displayName String?
+  phone String?
+  connected Boolean @default(false)
+  loggedIn Boolean @default(false)
+  metadata Json?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  tenant Tenant @relation(fields:[tenantId],references:[id],onDelete:Cascade)
+  @@unique([tenantId,sessionId])
+  @@index([tenantId,connected])
+}
+
+model AiAgent {
+  id String @id @default(uuid()) @db.Uuid
+  tenantId String @db.Uuid
+  name String
+  description String?
+  systemPrompt String
+  tone String @default("professional")
+  model String @default("gpt-5.6")
+  active Boolean @default(false)
+  channels Json?
+  handoffRules Json?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  tenant Tenant @relation(fields:[tenantId],references:[id],onDelete:Cascade)
+  executions AiExecution[]
+  @@index([tenantId,active])
+}
+
+model AiExecution {
+  id String @id @default(uuid()) @db.Uuid
+  tenantId String @db.Uuid
+  agentId String? @db.Uuid
+  purpose String
+  model String
+  responseId String?
+  input Json?
+  output Json?
+  inputTokens Int?
+  outputTokens Int?
+  latencyMs Int?
+  createdAt DateTime @default(now())
+  tenant Tenant @relation(fields:[tenantId],references:[id],onDelete:Cascade)
+  agent AiAgent? @relation(fields:[agentId],references:[id],onDelete:SetNull)
+  @@index([tenantId,createdAt])
+}
+
+model Integration {
+  id String @id @default(uuid()) @db.Uuid
+  tenantId String @db.Uuid
+  type IntegrationType
+  name String
+  status IntegrationStatus @default(DISCONNECTED)
+  config Json?
+  secretRef String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  tenant Tenant @relation(fields:[tenantId],references:[id],onDelete:Cascade)
+  @@index([tenantId,type])
+}
+
+model Secret {
+  id String @id @default(uuid()) @db.Uuid
+  tenantId String @db.Uuid
+  name String
+  ciphertext String
+  iv String
+  authTag String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  tenant Tenant @relation(fields:[tenantId],references:[id],onDelete:Cascade)
+  mailboxes EmailMailbox[]
+  @@unique([tenantId,name])
+}
+
+model EmailMailbox {
+  id String @id @default(uuid()) @db.Uuid
+  tenantId String @db.Uuid
+  secretId String? @db.Uuid
+  name String
+  host String
+  port Int @default(587)
+  secure Boolean @default(false)
+  username String?
+  fromAddress String
+  fromName String?
+  replyTo String?
+  active Boolean @default(true)
+  lastTestAt DateTime?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  tenant Tenant @relation(fields:[tenantId],references:[id],onDelete:Cascade)
+  secret Secret? @relation(fields:[secretId],references:[id],onDelete:SetNull)
+  campaigns Campaign[]
+  @@index([tenantId,active])
+}
+
+model SuppressionEntry {
+  id String @id @default(uuid()) @db.Uuid
+  tenantId String @db.Uuid
+  email String
+  reason SuppressionReason
+  source String?
+  createdAt DateTime @default(now())
+  tenant Tenant @relation(fields:[tenantId],references:[id],onDelete:Cascade)
+  @@unique([tenantId,email])
+}
+
+model TrackingEvent {
+  id String @id @default(uuid()) @db.Uuid
+  tenantId String @db.Uuid
+  messageId String? @db.Uuid
+  type TrackingEventType
+  targetUrl String?
+  ip String?
+  userAgent String?
+  metadata Json?
+  createdAt DateTime @default(now())
+  tenant Tenant @relation(fields:[tenantId],references:[id],onDelete:Cascade)
+  @@index([tenantId,type,createdAt])
+  @@unique([messageId,type])
+}
+
+model IcpProfile {
+  id String @id @default(uuid()) @db.Uuid
+  tenantId String @db.Uuid
+  name String
+  description String?
+  industries String[]
+  countries String[]
+  states String[]
+  cities String[]
+  companySizes String[]
+  jobTitles String[]
+  keywords String[]
+  minScore Int @default(0)
+  active Boolean @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  tenant Tenant @relation(fields:[tenantId],references:[id],onDelete:Cascade)
+  jobs ProspectingJob[]
+  @@index([tenantId,active])
+}
+
+model ProspectingJob {
+  id String @id @default(uuid()) @db.Uuid
+  tenantId String @db.Uuid
+  icpProfileId String? @db.Uuid
+  status ProspectingJobStatus @default(QUEUED)
+  provider String
+  query Json?
+  resultCount Int @default(0)
+  error String?
+  startedAt DateTime?
+  finishedAt DateTime?
+  createdAt DateTime @default(now())
+  tenant Tenant @relation(fields:[tenantId],references:[id],onDelete:Cascade)
+  icpProfile IcpProfile? @relation(fields:[icpProfileId],references:[id],onDelete:SetNull)
+  prospects Prospect[]
+  @@index([tenantId,status,createdAt])
+}
+
+model Prospect {
+  id String @id @default(uuid()) @db.Uuid
+  tenantId String @db.Uuid
+  jobId String? @db.Uuid
+  companyId String? @db.Uuid
+  convertedLeadId String? @db.Uuid
+  status ProspectStatus @default(NEW)
+  firstName String?
+  lastName String?
+  companyName String?
+  jobTitle String?
+  email String?
+  phone String?
+  website String?
+  linkedinUrl String?
+  industry String?
+  city String?
+  state String?
+  country String?
+  score Int?
+  source String?
+  raw Json?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  tenant Tenant @relation(fields:[tenantId],references:[id],onDelete:Cascade)
+  job ProspectingJob? @relation(fields:[jobId],references:[id],onDelete:SetNull)
+  company Company? @relation(fields:[companyId],references:[id],onDelete:SetNull)
+  convertedLead Lead? @relation("ConvertedLead",fields:[convertedLeadId],references:[id],onDelete:SetNull)
+  @@index([tenantId,status,score])
+  @@index([tenantId,email])
+}
+
+model CalendarEvent {
+  id String @id @default(uuid()) @db.Uuid
+  tenantId String @db.Uuid
+  title String
+  description String?
+  startsAt DateTime
+  endsAt DateTime
+  timezone String @default("America/Sao_Paulo")
+  status CalendarEventStatus @default(SCHEDULED)
+  attendeeName String?
+  attendeeEmail String?
+  externalId String?
+  meetingUrl String?
+  location String?
+  allDay Boolean @default(false)
+  source String @default("KLYVERO")
+  htmlLink String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  tenant Tenant @relation(fields:[tenantId],references:[id],onDelete:Cascade)
+  @@index([tenantId,startsAt])
+  @@index([tenantId,externalId])
+}
+
+model WebhookEndpoint {
+  id String @id @default(uuid()) @db.Uuid
+  tenantId String @db.Uuid
+  name String
+  url String
+  secret String
+  events String[]
+  active Boolean @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  tenant Tenant @relation(fields:[tenantId],references:[id],onDelete:Cascade)
+  deliveries WebhookDelivery[]
+  @@index([tenantId,active])
+}
+
+model WebhookDelivery {
+  id String @id @default(uuid()) @db.Uuid
+  endpointId String @db.Uuid
+  event String
+  status WebhookDeliveryStatus @default(PENDING)
+  requestBody Json
+  responseStatus Int?
+  responseBody String?
+  attempts Int @default(0)
+  nextAttemptAt DateTime?
+  deliveredAt DateTime?
+  createdAt DateTime @default(now())
+  endpoint WebhookEndpoint @relation(fields:[endpointId],references:[id],onDelete:Cascade)
+  @@index([status,nextAttemptAt])
+}
+
+model ApiKey {
+  id String @id @default(uuid()) @db.Uuid
+  tenantId String @db.Uuid
+  name String
+  prefix String
+  keyHash String @unique
+  scopes String[]
+  active Boolean @default(true)
+  lastUsedAt DateTime?
+  expiresAt DateTime?
+  createdAt DateTime @default(now())
+  tenant Tenant @relation(fields:[tenantId],references:[id],onDelete:Cascade)
+  @@index([tenantId,active])
+}
+
+model ExternalEventReceipt {
+  id String @id @default(uuid()) @db.Uuid
+  provider String
+  externalId String
+  receivedAt DateTime @default(now())
+  @@unique([provider,externalId])
+  @@index([provider,receivedAt])
+}
+
+model UsageCounter {
+  id String @id @default(uuid()) @db.Uuid
+  tenantId String @db.Uuid
+  key String
+  period String
+  value Int @default(0)
+  updatedAt DateTime @updatedAt
+  tenant Tenant @relation(fields:[tenantId],references:[id],onDelete:Cascade)
+  @@unique([tenantId,key,period])
+}
+
+model Notification {
+  id String @id @default(uuid()) @db.Uuid
+  tenantId String @db.Uuid
+  userId String? @db.Uuid
+  type NotificationType @default(INFO)
+  title String
+  body String?
+  readAt DateTime?
+  createdAt DateTime @default(now())
+  tenant Tenant @relation(fields:[tenantId],references:[id],onDelete:Cascade)
+  user User? @relation(fields:[userId],references:[id],onDelete:Cascade)
+  @@index([tenantId,userId,readAt,createdAt])
+}
+
+model AuditLog {
+  id String @id @default(uuid()) @db.Uuid
+  tenantId String? @db.Uuid
+  actorUserId String? @db.Uuid
+  action String
+  entity String?
+  entityId String?
+  ip String?
+  userAgent String?
+  metadata Json?
+  createdAt DateTime @default(now())
+  tenant Tenant? @relation(fields:[tenantId],references:[id],onDelete:SetNull)
+  @@index([tenantId,createdAt])
+  @@index([actorUserId,createdAt])
+}
+
+model Plan {
+  id String @id @default(uuid()) @db.Uuid
+  code String @unique
+  name String
+  monthlyPrice Decimal @db.Decimal(12,2)
+  stripePriceId String?
+  limits Json?
+  features Json?
+  active Boolean @default(true)
+  subscriptions Subscription[]
+}
+
+model Subscription {
+  id String @id @default(uuid()) @db.Uuid
+  tenantId String @unique @db.Uuid
+  planId String @db.Uuid
+  status String @default("trial")
+  trialEndsAt DateTime?
+  currentPeriodEndsAt DateTime?
+  externalCustomerId String?
+  externalSubscriptionId String?
+  tenant Tenant @relation(fields:[tenantId],references:[id],onDelete:Cascade)
+  plan Plan @relation(fields:[planId],references:[id])
+}
