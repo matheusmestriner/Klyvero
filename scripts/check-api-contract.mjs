@@ -1,28 +1,14 @@
 // Fails when the web app calls an API route that the NestJS API does not expose.
 //
 // Collects every `@Get/@Post/...` route from apps/api/src/modules/**/*.controller.ts and every
-// `api('/path')` call (method + path) made by apps/web, by the generated web routes
-// (deploy/web-routes-v4.part.*, base64 gzip JSON) and by the build-time patch scripts,
-// then reports the calls with no matching route.
+// `api('/path')` call (method + path) made by apps/web and apps/mobile, then reports the calls
+// with no matching route.
 //
 // It checks routes only. Payload shapes are enforced at runtime by the API ValidationPipe.
 import { readFileSync, readdirSync, statSync } from 'node:fs';
 import { join, relative } from 'node:path';
-import { gunzipSync } from 'node:zlib';
 
 const root = process.cwd();
-const deploy = join(root, 'deploy');
-
-// Keep in sync with scripts/materialize-web-routes.mjs: these pages come from git, not from the payload.
-const SOURCE_MANAGED = new Set(['team/page.tsx', 'calendar/page.tsx', 'whatsapp/page.tsx', 'inbox/page.tsx', 'email/page.tsx', 'billing/page.tsx', 'prospecting/page.tsx', 'ai/page.tsx', 'campaigns/page.tsx']);
-
-function parts(prefix) {
-  return readdirSync(deploy)
-    .filter((name) => name.startsWith(prefix))
-    .sort((a, b) => a.localeCompare(b, 'en', { numeric: true }))
-    .map((name) => readFileSync(join(deploy, name), 'utf8').trim())
-    .join('');
-}
 
 function walk(dir, out = []) {
   for (const entry of readdirSync(dir)) {
@@ -58,16 +44,6 @@ const sources = [];
 for (const file of walk(join(root, 'apps', 'web')).filter((f) => /\.(ts|tsx)$/.test(f))) {
   sources.push({ name: relative(root, file), text: readFileSync(file, 'utf8') });
 }
-const generated = JSON.parse(gunzipSync(Buffer.from(parts('web-routes-v4.part.'), 'base64')).toString('utf8'));
-for (const [name, text] of Object.entries(generated)) {
-  if (!SOURCE_MANAGED.has(name)) sources.push({ name: `deploy/web-routes-v4 → ${name}`, text });
-}
-// Build-time patches inject api() calls into pages through escaped template strings.
-for (const file of readdirSync(join(root, 'scripts')).filter((f) => f.startsWith('patch-') && f.endsWith('.mjs'))) {
-  const text = readFileSync(join(root, 'scripts', file), 'utf8').replace(/\\`/g, '`').replace(/\\\$\{/g, '${');
-  sources.push({ name: `scripts/${file}`, text });
-}
-
 const calls = new Map(); // "METHOD /path" -> Set(origin)
 function addCall(method, path, origin) {
   const key = `${method} ${normalize(path)}`;

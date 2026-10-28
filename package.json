@@ -4,7 +4,6 @@
   "private": true,
   "packageManager": "pnpm@10.15.0",
   "scripts": {
-    "preinstall": "node scripts/materialize-web-routes.mjs && node scripts/patch-whatsapp-thread-delete.mjs",
     "dev": "pnpm -r --parallel --filter @klyvero/api --filter @klyvero/web dev",
     "build": "pnpm -r --filter @klyvero/api --filter @klyvero/web build",
     "test": "pnpm -r test",
@@ -15,8 +14,6 @@
     "db:migration:create": "pnpm --filter @klyvero/api prisma:migration:create",
     "check": "pnpm --filter @klyvero/api lint && pnpm --filter @klyvero/web lint",
     "security:audit": "pnpm audit --audit-level high",
-    "runtime:validate": "node scripts/validate-runtime-artifacts.mjs",
-    "contract:check": "node scripts/check-api-contract.mjs",
-    "launch:check": "node scripts/launch-readiness.mjs"
+    "contract:check": "node scripts/check-api-contract.mjs"
   }
 }

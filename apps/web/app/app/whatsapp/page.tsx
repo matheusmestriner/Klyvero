@@ -72,6 +72,9 @@ export default function WhatsAppPage() {
   const [connecting, setConnecting] = useState(false);
   const [sending, setSending] = useState(false);
   const [savingContact, setSavingContact] = useState(false);
+  const [deletingId, setDeletingId] = useState('');
+  const [notice, setNotice] = useState('');
+  const [deletingThreadId, setDeletingThreadId] = useState('');
   const [showContactModal, setShowContactModal] = useState(false);
   const [showPairing, setShowPairing] = useState(false);
   const [mobileChat, setMobileChat] = useState(false);
@@ -104,6 +107,7 @@ export default function WhatsAppPage() {
   const selected = selectedId ? whatsappThreads.find((thread) => thread.id === selectedId) || null : null;
   const selectedContact = selectedContactId ? contacts.find((contact) => contact.id === selectedContactId) || null : null;
   const target = threadPhone(selected) || contactPhone(selectedContact) || normalizePhone(newNumber);
+  const activeContact = selectedContact || contacts.find((contact) => contactPhone(contact) === target) || null;
   const activeThread = selected || (target ? whatsappThreads.find((thread) => threadPhone(thread) === target) || null : null);
   const displayName = selected ? threadName(selected) : selectedContact ? contactName(selectedContact) : newNumber || 'Nova conversa';
   const messages = Array.isArray(activeThread?.messages) ? activeThread!.messages! : [];
@@ -329,6 +333,118 @@ export default function WhatsAppPage() {
     }
   }
 
+  // KLYVERO_WHATSAPP_THREAD_DELETE_V1
+  async function deleteStoredInboxItem(messageId: string) {
+    if (!messageId || messageId.startsWith('local-')) return;
+    const encoded = encodeURIComponent(messageId);
+    try {
+      await api(`/inbox/messages/${encoded}`, { method: 'DELETE' });
+    } catch {
+      await api(`/inbox/${encoded}`, { method: 'DELETE' });
+    }
+  }
+
+  async function deleteConversation(thread: InboxThread) {
+    if (deletingThreadId) return;
+    const name = threadName(thread);
+    const items = Array.isArray(thread.messages) && thread.messages.length
+      ? thread.messages
+      : [{ id: thread.id } as InboxMessage];
+
+    if (!window.confirm(`Excluir a conversa com "${name}"? O histórico será removido do Klyvero, mas o contato será mantido.`)) return;
+
+    setDeletingThreadId(thread.id);
+    setError('');
+    try {
+      for (const item of items) await deleteStoredInboxItem(item.id);
+
+      const phone = threadPhone(thread);
+      setThreads((rows) => rows.filter((row) => phone ? threadPhone(row) !== phone : row.id !== thread.id));
+
+      if (selectedId === thread.id || (selected && phone && threadPhone(selected) === phone)) {
+        setSelectedId('');
+        setSelectedContactId('');
+        setNewNumber('');
+        setMobileChat(false);
+      }
+    } catch (cause: any) {
+      setError(cause?.message || 'Não foi possível excluir a conversa.');
+      await loadInbox(true);
+    } finally {
+      setDeletingThreadId('');
+    }
+  }
+
+  // KLYVERO_MESSAGING_DELETE_V1
+  async function deleteStoredMessage(messageId: string) {
+    if (messageId.startsWith('local-')) return;
+    const encoded = encodeURIComponent(messageId);
+    try {
+      await api(`/inbox/messages/${encoded}`, { method: 'DELETE' });
+    } catch {
+      await api(`/inbox/${encoded}`, { method: 'DELETE' });
+    }
+  }
+
+  async function deleteMessage(message: InboxMessage) {
+    if (deletingId) return;
+    const direction = String(message.direction || '').toUpperCase() === 'OUTBOUND' ? 'enviada' : 'recebida';
+    if (!window.confirm(`Excluir esta mensagem ${direction}? Esta ação não pode ser desfeita.`)) return;
+
+    setDeletingId(`message:${message.id}`);
+    setError('');
+    setNotice('');
+    try {
+      await deleteStoredMessage(message.id);
+      setThreads((rows) => removeMessageFromInboxRows(rows, message.id));
+      setNotice('Mensagem excluída.');
+    } catch (cause: any) {
+      setError(cause?.message || 'Não foi possível excluir a mensagem.');
+    } finally {
+      setDeletingId('');
+    }
+  }
+
+  async function clearConversation() {
+    if (!messages.length || deletingId) return;
+    if (!window.confirm(`Excluir todas as ${messages.length} mensagem(ns) desta conversa? O contato será mantido.`)) return;
+
+    setDeletingId('conversation');
+    setError('');
+    setNotice('');
+    try {
+      for (const message of messages) await deleteStoredMessage(message.id);
+      const phone = target;
+      setThreads((rows) => rows.filter((row) => threadPhone(row) !== phone));
+      setSelectedId('');
+      setNotice('Conversa limpa. O contato foi mantido.');
+    } catch (cause: any) {
+      setError(cause?.message || 'Não foi possível limpar toda a conversa.');
+      await loadInbox(true);
+    } finally {
+      setDeletingId('');
+    }
+  }
+
+  async function deleteContact(contact: Contact) {
+    if (deletingId) return;
+    if (!window.confirm(`Excluir o contato "${contactName(contact)}"? As mensagens serão mantidas, mas o cadastro do contato será removido.`)) return;
+
+    setDeletingId(`contact:${contact.id}`);
+    setError('');
+    setNotice('');
+    try {
+      await api(`/contacts/${encodeURIComponent(contact.id)}`, { method: 'DELETE' });
+      setContacts((rows) => rows.filter((row) => row.id !== contact.id));
+      if (selectedContactId === contact.id) setSelectedContactId('');
+      setNotice('Contato excluído. O histórico de mensagens foi preservado.');
+    } catch (cause: any) {
+      setError(cause?.message || 'Não foi possível excluir o contato.');
+    } finally {
+      setDeletingId('');
+    }
+  }
+
   function selectThread(thread: InboxThread) {
     setSelectedContactId('');
     setSelectedId(thread.id);
@@ -351,6 +467,7 @@ export default function WhatsAppPage() {
         action={<button className="btn primary" type="button" onClick={openContactModal}><Icon name="plus" size={16} /> Adicionar contato</button>}
       />
       {error && <div className={`error ${styles.error}`}>{error}</div>}
+      {notice && <div className={`notice ${styles.error}`}>{notice}</div>}
 
       <div className={styles.workspace}>
         <aside className={`${styles.sidebar} ${mobileChat ? styles.hideMobile : ''}`}>
@@ -369,13 +486,30 @@ export default function WhatsAppPage() {
           <div className={styles.threadList}>
             {whatsappThreads.length > 0 && <div className={styles.sectionLabel}>Conversas recentes</div>}
             {whatsappThreads.map((thread) => (
-              <button key={thread.id} type="button" className={`${styles.thread} ${selected?.id === thread.id ? styles.threadActive : ''}`} onClick={() => selectThread(thread)}>
-                <div className={styles.avatar}>{initials(threadName(thread))}</div>
-                <div className={styles.threadMain}>
-                  <div className={styles.threadTop}><span className={styles.threadName}>{threadName(thread)}</span><span className={styles.time}>{lastTime(thread)}</span></div>
-                  <div className={styles.preview}><span>{lastText(thread) || threadPhone(thread) || 'Sem mensagens'}</span></div>
-                </div>
-              </button>
+              <div key={thread.id} className={styles.threadRow}>
+                <button type="button" className={`${styles.thread} ${selected?.id === thread.id ? styles.threadActive : ''}`} onClick={() => selectThread(thread)}>
+                  <div className={styles.avatar}>{initials(threadName(thread))}</div>
+                  <div className={styles.threadMain}>
+                    <div className={styles.threadTop}><span className={styles.threadName}>{threadName(thread)}</span><span className={styles.time}>{lastTime(thread)}</span></div>
+                    <div className={styles.preview}><span>{lastText(thread) || threadPhone(thread) || 'Sem mensagens'}</span></div>
+                  </div>
+                </button>
+                <button
+                  type="button"
+                  className={styles.threadDelete}
+                  disabled={Boolean(deletingThreadId)}
+                  onClick={() => void deleteConversation(thread)}
+                  aria-label={`Excluir conversa com ${threadName(thread)}`}
+                  title="Excluir conversa"
+                >
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                    <path d="M3 6h18" />
+                    <path d="M8 6V4h8v2" />
+                    <path d="m19 6-1 14H6L5 6" />
+                    <path d="M10 11v5M14 11v5" />
+                  </svg>
+                </button>
+              </div>
             ))}
 
             {filteredContacts.length > 0 && <div className={styles.sectionLabel}>Contatos</div>}
@@ -416,7 +550,8 @@ export default function WhatsAppPage() {
                 <div className={styles.chatIdentity}><strong>{displayName}</strong><span>{formatPhone(target) || 'Informe um número para iniciar a conversa'}</span></div>
                 <div className={styles.chatActions}>
                   <button className={styles.toolButton} type="button" onClick={() => void loadInbox()} aria-label="Atualizar"><Icon name="refresh" size={16} /></button>
-                  <button className={styles.toolButton} type="button" aria-label="Mais opções"><Icon name="more" size={17} /></button>
+                  {messages.length > 0 && <button className={`${styles.toolButton} ${styles.dangerButton}`} type="button" disabled={Boolean(deletingId)} onClick={() => void clearConversation()} aria-label="Limpar conversa" title="Excluir todas as mensagens desta conversa"><Icon name="x" size={16} /></button>}
+                  {activeContact && <button className={`${styles.toolButton} ${styles.dangerButton}`} type="button" disabled={Boolean(deletingId)} onClick={() => void deleteContact(activeContact)} aria-label="Excluir contato" title="Excluir contato"><Icon name="x" size={16} /></button>}
                 </div>
               </header>
 
@@ -430,7 +565,7 @@ export default function WhatsAppPage() {
                 {messages.length > 0 && <div className={styles.dayLabel}>Histórico da conversa</div>}
                 {messages.map((message) => {
                   const outgoing = String(message.direction || '').toUpperCase() === 'OUTBOUND';
-                  return <div key={message.id} className={`${styles.bubble} ${outgoing ? styles.bubbleOut : ''}`}><div>{message.text || message.subject || '[conteúdo sem texto]'}</div><div className={styles.bubbleMeta}><span>{messageTime(message.createdAt)}</span>{outgoing && <Icon name="check" size={12} />}</div></div>;
+                  return <div key={message.id} className={`${styles.bubble} ${outgoing ? styles.bubbleOut : ''}`}><div>{message.text || message.subject || '[conteúdo sem texto]'}</div><div className={styles.bubbleMeta}><span>{messageTime(message.createdAt)}</span>{outgoing && <Icon name="check" size={12} />}<button className={styles.messageDelete} type="button" disabled={Boolean(deletingId)} onClick={() => void deleteMessage(message)} aria-label={`Excluir mensagem ${outgoing ? 'enviada' : 'recebida'}`} title="Excluir mensagem"><Icon name="x" size={11} /></button></div></div>;
                 })}
                 {!messages.length && <div className={styles.welcome}><div className={styles.welcomeInner}><div className={styles.welcomeIcon}><Icon name="whatsapp" size={34} /></div><h3>Nova conversa</h3><span>Envie a primeira mensagem para {displayName}.</span></div></div>}
               </div>
@@ -482,6 +617,15 @@ export default function WhatsAppPage() {
       )}
     </>
   );
+}
+
+function removeMessageFromInboxRows(rows: InboxThread[], messageId: string) {
+  return rows.flatMap((row) => {
+    const nested = Array.isArray(row.messages) ? row.messages : null;
+    if (nested) return [{ ...row, messages: nested.filter((message) => message.id !== messageId) }];
+    if (row.id === messageId) return [];
+    return [row];
+  });
 }
 
 function mergeWhatsAppThreads(rows: InboxThread[], contacts: Contact[]) {
