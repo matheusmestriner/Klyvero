@@ -13,7 +13,7 @@ import { Public } from '../../common/public.decorator';
 import { CurrentUser } from '../../common/current-user.decorator';
 import { AuthUser } from '../../common/auth.types';
 import { AuthService } from './auth.service';
-import { BootstrapDto, ForgotPasswordDto, LoginDto, OwnerRecoveryDto, ResetPasswordDto } from './dto';
+import { BootstrapDto, ForgotPasswordDto, LoginDto, OwnerRecoveryDto, RefreshDto, ResetPasswordDto } from './dto';
 
 @Controller('auth')
 export class AuthController {
@@ -40,6 +40,15 @@ export class AuthController {
   private noStore(res: Response) {
     res.setHeader('cache-control', 'no-store, max-age=0');
     res.setHeader('pragma', 'no-cache');
+  }
+
+  /**
+   * Native apps cannot use the httpOnly cookie. With `x-klyvero-client: mobile` the refresh token
+   * travels in the body instead, and is only ever read from the body: a script running in a browser
+   * session cannot call /auth/refresh to pull the token out of the cookie.
+   */
+  private isMobile(req: Request) {
+    return String(req.headers['x-klyvero-client'] ?? '').toLowerCase() === 'mobile';
   }
 
   private assertBrowserOrigin(req: Request) {
@@ -104,6 +113,7 @@ export class AuthController {
     this.assertBrowserOrigin(req);
     this.noStore(res);
     const out = await this.auth.login(dto, { ip: req.ip, userAgent: req.headers['user-agent'] });
+    if (this.isMobile(req)) return out;
     this.cookie(res, out.refreshToken);
     const { refreshToken, ...safe } = out;
     return safe;
@@ -111,13 +121,15 @@ export class AuthController {
 
   @Public()
   @Post('refresh')
-  async refresh(@Req() req: Request, @Res({ passthrough: true }) res: Response) {
+  async refresh(@Body() dto: RefreshDto, @Req() req: Request, @Res({ passthrough: true }) res: Response) {
     this.assertBrowserOrigin(req);
     this.noStore(res);
-    const out = await this.auth.refresh(req.cookies?.klyvero_refresh, {
+    const mobile = this.isMobile(req);
+    const out = await this.auth.refresh(mobile ? dto.refreshToken : req.cookies?.klyvero_refresh, {
       ip: req.ip,
       userAgent: req.headers['user-agent'],
     });
+    if (mobile) return out;
     this.cookie(res, out.refreshToken);
     const { refreshToken, ...safe } = out;
     return safe;
@@ -125,10 +137,10 @@ export class AuthController {
 
   @Public()
   @Post('logout')
-  async logout(@Req() req: Request, @Res({ passthrough: true }) res: Response) {
+  async logout(@Body() dto: RefreshDto, @Req() req: Request, @Res({ passthrough: true }) res: Response) {
     this.assertBrowserOrigin(req);
     this.noStore(res);
-    const out = await this.auth.logout(req.cookies?.klyvero_refresh);
+    const out = await this.auth.logout(this.isMobile(req) ? dto.refreshToken : req.cookies?.klyvero_refresh);
     res.clearCookie('klyvero_refresh', {
       path: '/api/v1/auth',
       sameSite: 'none',

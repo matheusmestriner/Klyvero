@@ -2,7 +2,7 @@ import { BadRequestException, Injectable, NotFoundException } from '@nestjs/comm
 import { isUUID } from 'class-validator';
 import { PrismaService } from '../../infra/prisma/prisma.service';
 import { CalendarIntegrationService } from '../calendar-integration/calendar-integration.service';
-import { AgentDto, CompanyDto, ContactDto, EventDto, IntegrationDto, LeadDto, UpdateEventDto } from './dto';
+import { AgentDto, CompanyDto, ContactDto, EventDto, EventsQueryDto, IntegrationDto, LeadDto, UpdateEventDto } from './dto';
 
 @Injectable()
 export class CrudService {
@@ -22,11 +22,36 @@ export class CrudService {
     });
   }
 
-  updateLead(tenantId: string, id: string, dto: LeadDto) {
-    return this.prisma.lead.updateMany({
+  /** Returns the updated lead (the previous response was Prisma's {count}). */
+  async updateLead(tenantId: string, id: string, dto: LeadDto) {
+    if (!this.isUuid(id)) throw new NotFoundException('Lead not found');
+    const result = await this.prisma.lead.updateMany({
       where: { id, tenantId },
       data: { ...dto, email: dto.email?.trim().toLowerCase() },
     });
+    if (!result.count) throw new NotFoundException('Lead not found');
+    return this.prisma.lead.findFirstOrThrow({ where: { id, tenantId } });
+  }
+
+  /** One lead with its recent history and the campaigns it is in. */
+  async lead(tenantId: string, id: string) {
+    const lead = this.isUuid(id) ? await this.prisma.lead.findFirst({ where: { id, tenantId } }) : null;
+    if (!lead) throw new NotFoundException('Lead not found');
+    const [activities, enrollments] = await Promise.all([
+      this.prisma.leadActivity.findMany({ where: { tenantId, leadId: lead.id }, orderBy: { createdAt: 'desc' }, take: 30 }),
+      this.prisma.sequenceEnrollment.findMany({
+        where: { tenantId, leadId: lead.id },
+        select: { id: true, status: true, currentPosition: true, nextRunAt: true, repliedAt: true, campaign: { select: { id: true, name: true, status: true } } },
+        orderBy: { createdAt: 'desc' },
+      }),
+    ]);
+    return { ...lead, activities, enrollments };
+  }
+
+  async addLeadNote(tenantId: string, id: string, body: string, actorUserId: string) {
+    const lead = this.isUuid(id) ? await this.prisma.lead.findFirst({ where: { id, tenantId }, select: { id: true } }) : null;
+    if (!lead) throw new NotFoundException('Lead not found');
+    return this.prisma.leadActivity.create({ data: { tenantId, leadId: lead.id, actorUserId, type: 'note', title: 'Nota', body } });
   }
 
   deleteLead(tenantId: string, id: string) {
@@ -87,8 +112,15 @@ export class CrudService {
     return this.prisma.aiAgent.updateMany({ where: { id, tenantId }, data: { active } });
   }
 
-  events(tenantId: string) {
-    return this.prisma.calendarEvent.findMany({ where: { tenantId }, orderBy: { startsAt: 'asc' } });
+  events(tenantId: string, query: EventsQueryDto = {}) {
+    return this.prisma.calendarEvent.findMany({
+      where: {
+        tenantId,
+        ...(query.from ? { endsAt: { gte: new Date(query.from) } } : {}),
+        ...(query.to ? { startsAt: { lte: new Date(query.to) } } : {}),
+      },
+      orderBy: { startsAt: 'asc' },
+    });
   }
 
   async createEvent(tenantId: string, dto: EventDto) {

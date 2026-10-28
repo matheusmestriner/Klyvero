@@ -5,7 +5,7 @@ import { Feature } from '../../common/feature.decorator';
 import { Roles } from '../../common/roles.decorator';
 import { AuthUser } from '../../common/auth.types';
 import { CrudService } from './crud.service';
-import { AgentDto, CompanyDto, ContactDto, EventDto, IntegrationDto, LeadDto, UpdateEventDto } from './dto';
+import { AgentDto, CompanyDto, ContactDto, EventDto, EventsQueryDto, IntegrationDto, LeadDto, LeadNoteDto, UpdateEventDto } from './dto';
 
 const WRITE=[UserRole.OWNER,UserRole.ADMIN,UserRole.MANAGER,UserRole.SDR,UserRole.MEMBER];
 @Controller()
@@ -14,6 +14,8 @@ export class CrudController {
   private tenant(user:AuthUser){return user.tenantId}
 
   @Feature('leads') @Get('leads') leads(@CurrentUser()u:AuthUser){return this.service.leads(this.tenant(u))}
+  @Feature('leads') @Get('leads/:id') leadDetail(@CurrentUser()u:AuthUser,@Param('id')id:string){return this.service.lead(this.tenant(u),id)}
+  @Feature('leads') @Roles(...WRITE) @Post('leads/:id/notes') leadNote(@CurrentUser()u:AuthUser,@Param('id')id:string,@Body()d:LeadNoteDto){return this.service.addLeadNote(this.tenant(u),id,d.body,u.sub)}
   @Feature('leads') @Roles(...WRITE) @Post('leads') lead(@CurrentUser()u:AuthUser,@Body()d:LeadDto){return this.service.createLead(this.tenant(u),d)}
   @Feature('leads') @Roles(...WRITE) @Patch('leads/:id') updateLead(@CurrentUser()u:AuthUser,@Param('id')id:string,@Body()d:LeadDto){return this.service.updateLead(this.tenant(u),id,d)}
   @Feature('leads') @Roles(...WRITE) @Delete('leads/:id') deleteLead(@CurrentUser()u:AuthUser,@Param('id')id:string){return this.service.deleteLead(this.tenant(u),id)}
@@ -30,7 +32,7 @@ export class CrudController {
   @Feature('ai_agents') @Roles(...WRITE) @Post('ai-agents') agent(@CurrentUser()u:AuthUser,@Body()d:AgentDto){return this.service.createAgent(this.tenant(u),d)}
   @Feature('ai_agents') @Roles(...WRITE) @Patch('ai-agents/:id/active') toggle(@CurrentUser()u:AuthUser,@Param('id')id:string,@Query('value')v:string){return this.service.toggleAgent(this.tenant(u),id,v==='true')}
 
-  @Feature('calendar') @Get('calendar') events(@CurrentUser()u:AuthUser){return this.service.events(this.tenant(u))}
+  @Feature('calendar') @Get('calendar') events(@CurrentUser()u:AuthUser,@Query()q:EventsQueryDto){return this.service.events(this.tenant(u),q)}
   @Feature('calendar') @Roles(...WRITE) @Post('calendar') event(@CurrentUser()u:AuthUser,@Body()d:EventDto){return this.service.createEvent(this.tenant(u),d)}
   @Feature('calendar') @Roles(...WRITE) @Patch('calendar/:id') updateEvent(@CurrentUser()u:AuthUser,@Param('id')id:string,@Body()d:UpdateEventDto){return this.service.updateEvent(this.tenant(u),id,d)}
   @Feature('calendar') @Roles(...WRITE) @Delete('calendar/:id') deleteEvent(@CurrentUser()u:AuthUser,@Param('id')id:string){return this.service.deleteEvent(this.tenant(u),id)}

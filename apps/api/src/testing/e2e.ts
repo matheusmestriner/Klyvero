@@ -17,6 +17,13 @@ export function testDatabaseUrl() {
 }
 
 export type FakeSmtp = { port: number; mails: ParsedMail[]; failNext: number; close: () => Promise<void> };
+export type FakeExpoPush = {
+  url: string;
+  requests: any[][];
+  /** Answers each notification with a ticket; replace to simulate errors. */
+  tickets: (messages: any[]) => any[];
+  close: () => Promise<void>;
+};
 export type FakeBridge = { url: string; sent: { to: string; text: string; sessionId: string }[]; close: () => Promise<void> };
 
 /** Accepts mail on a random local port and keeps it parsed. */
@@ -63,6 +70,25 @@ export async function startFakeBridge(): Promise<FakeBridge> {
   await new Promise<void>((resolve) => server.listen(0, '127.0.0.1', resolve));
   const port = (server.address() as { port: number }).port;
   return { url: `http://127.0.0.1:${port}`, sent, close: () => new Promise((resolve) => server.close(() => resolve())) };
+}
+
+/** Stands in for Expo's push service. */
+export async function startFakeExpoPush(): Promise<FakeExpoPush> {
+  const state: FakeExpoPush = { url: '', requests: [], tickets: (messages) => messages.map(() => ({ status: 'ok', id: 'ticket' })), close: async () => undefined };
+  const server = createServer((req, res) => {
+    let body = '';
+    req.on('data', (chunk) => (body += chunk));
+    req.on('end', () => {
+      const messages = JSON.parse(body || '[]');
+      state.requests.push(messages);
+      res.setHeader('content-type', 'application/json');
+      res.end(JSON.stringify({ data: state.tickets(messages) }));
+    });
+  });
+  await new Promise<void>((resolve) => server.listen(0, '127.0.0.1', resolve));
+  state.url = `http://127.0.0.1:${(server.address() as { port: number }).port}/push/send`;
+  state.close = () => new Promise((resolve) => server.close(() => resolve()));
+  return state;
 }
 
 export async function resetDatabase(prisma: PrismaClient) {
@@ -123,7 +149,7 @@ export class Api {
     const text = await response.text();
     let json: any = text;
     try { json = JSON.parse(text); } catch { /* plain text */ }
-    return { status: response.status, json };
+    return { status: response.status, json, headers: response.headers };
   }
 
   async login(tenantSlug: string, email: string, password: string) {

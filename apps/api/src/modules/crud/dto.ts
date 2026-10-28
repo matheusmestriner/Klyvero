@@ -88,6 +88,17 @@ export class EventDto {
 
 export class UpdateEventDto extends PartialType(EventDto) {}
 
+export class EventsQueryDto {
+  /** Only events that end at or after this instant. */
+  @IsOptional() @IsDateString() from?: string;
+  /** Only events that start at or before this instant. */
+  @IsOptional() @IsDateString() to?: string;
+}
+
+export class LeadNoteDto {
+  @IsString() @MinLength(1) @MaxLength(5000) body!: string;
+}
+
 export class IntegrationDto {
   @IsEnum(IntegrationType) type!: IntegrationType;
   @IsString() @MinLength(1) @MaxLength(160) name!: string;

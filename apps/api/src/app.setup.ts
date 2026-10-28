@@ -35,7 +35,7 @@ export function configureApp(app: NestExpressApplication) {
     },
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['authorization', 'content-type', 'x-api-key', 'x-inbound-token', 'stripe-signature'],
+    allowedHeaders: ['authorization', 'content-type', 'x-api-key', 'x-inbound-token', 'x-klyvero-client', 'stripe-signature'],
     maxAge: 600,
   });
 

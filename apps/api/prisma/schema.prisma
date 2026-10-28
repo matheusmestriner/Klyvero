@@ -206,6 +206,7 @@ model Tenant {
   notifications Notification[]
   secrets Secret[]
   activities LeadActivity[]
+  pushDevices PushDevice[]
   @@index([parentTenantId])
   @@index([type,status])
 }
@@ -224,6 +225,7 @@ model User {
   tenant Tenant @relation(fields:[tenantId],references:[id],onDelete:Cascade)
   refreshSessions RefreshSession[]
   passwordResets PasswordResetToken[]
+  pushDevices PushDevice[]
   assignedDeals Deal[] @relation("DealOwner")
   assignedTasks Task[] @relation("TaskAssignee")
   notifications Notification[]
@@ -259,6 +261,21 @@ model PasswordResetToken {
   createdAt DateTime @default(now())
   user User @relation(fields:[userId],references:[id],onDelete:Cascade)
   @@index([userId,createdAt])
+}
+
+model PushDevice {
+  id String @id @default(uuid()) @db.Uuid
+  tenantId String @db.Uuid
+  userId String @db.Uuid
+  token String @unique
+  platform String
+  deviceName String?
+  lastSeenAt DateTime @default(now())
+  createdAt DateTime @default(now())
+  tenant Tenant @relation(fields:[tenantId],references:[id],onDelete:Cascade)
+  user User @relation(fields:[userId],references:[id],onDelete:Cascade)
+  @@index([tenantId])
+  @@index([userId])
 }
 
 model TenantBranding {
@@ -580,6 +597,7 @@ model Message {
   metadata Json?
   sentAt DateTime?
   receivedAt DateTime?
+  readAt DateTime?
   createdAt DateTime @default(now())
   tenant Tenant @relation(fields:[tenantId],references:[id],onDelete:Cascade)
   thread MessageThread @relation(fields:[threadId],references:[id],onDelete:Cascade)

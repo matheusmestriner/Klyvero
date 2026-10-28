@@ -92,6 +92,18 @@ for (const { name, text } of sources) {
   }
 }
 
+// The phone app: api<T>('/path', { method }) for authenticated calls, post<T>('/path') for the auth endpoints
+// and useResource<T>('/path') for GETs.
+for (const file of walk(join(root, 'apps', 'mobile', 'src')).filter((f) => /\.(ts|tsx)$/.test(f) && !f.endsWith('.test.ts'))) {
+  const text = readFileSync(file, 'utf8');
+  const name = relative(root, file);
+  for (const match of text.matchAll(/\bapi(?:<[^>]*>)?\(\s*([`'"])(\/[^`'"]*)\1\s*(?:,\s*\{([^}]*)\})?/g)) {
+    addCall(match[3]?.match(/method\s*:\s*['"](\w+)['"]/)?.[1]?.toUpperCase() ?? 'GET', match[2], name);
+  }
+  for (const match of text.matchAll(/\bpost(?:<[^>]*>)?\(\s*([`'"])(\/[^`'"]*)\1/g)) addCall('POST', match[2], name);
+  for (const match of text.matchAll(/\buseResource(?:<[\s\S]*?>)?\(\s*([`'"])(\/[^`'"]*)\1/g)) addCall('GET', match[2], name);
+}
+
 // --- 3. compare --------------------------------------------------------------------------
 const missing = [];
 for (const [key, origins] of [...calls].sort()) {
